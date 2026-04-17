@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بروفايل العميل -  الزيادى</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon: #58a6ff; --success-green: #3fb950; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding: 1px; margin-top: 15px; }
+        .glass-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+        .stat-box { background: rgba(88, 166, 255, 0.1); border-radius: 15px; padding: 15px; text-align: center; border: 1px solid rgba(88, 166, 255, 0.2); }
+        .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--neon); }
+        .form-control, .form-select { background: rgba(0,0,0,0.2) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; }
+        .history-item { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px 0; transition: 0.3s; }
+        .payment-row { background: rgba(63, 185, 80, 0.05); border-right: 4px solid var(--success-green); padding-right: 10px; }
+        .method-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 5px; background: rgba(255,255,255,0.1); color: #fff; }
+        .nested-payment { font-size: 0.75rem; color: var(--success-green); padding-right: 15px; margin-top: 5px; border-right: 2px solid var(--success-green); }
+        
+        #printHeader, #printFooter { display: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0; }
+            .glass-card { border: 1px solid #eee !important; background: none !important; color: black !important; border-radius: 0 !important; }
+            .stat-box { border: 1px solid #eee !important; background: #f9f9f9 !important; color: black !important; }
+            .stat-val { color: black !important; }
+            .text-white, .text-info, .text-success, .text-danger { color: black !important; }
+            #printHeader { display: block; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+            #printFooter { display: block; position: fixed; bottom: 0; width: 100%; text-align: center; border-top: 1px solid #eee; padding: 10px; font-size: 10px; color: #555; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="printHeader" class="text-center">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="text-start">
+                <h2 class="fw-bold m-0" style="color: black;">الزيادى</h2>
+                <small>لصيانة وقطع غيار الموتوسيكلات</small>
+            </div>
+            <i class="fas fa-motorcycle fa-3x" style="color: black;"></i>
+        </div>
+        <hr>
+        <h4 class="fw-bold">كشف حساب العميل: <span id="printCustName">...</span></h4>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <h6 class="fw-bold m-0"><i class="fas fa-motorcycle text-info me-2"></i>ملف العميل </h6>
+        <div>
+            <button class="btn btn-outline-warning btn-sm rounded-pill px-3 me-1" onclick="window.print()">
+                <i class="fas fa-print"></i> كشف حساب
+            </button>
+            <a href="customers_list.html" class="btn btn-outline-light btn-sm rounded-pill px-3">رجوع</a>
+        </div>
+    </div>
+
+    <div class="glass-card shadow-sm">
+        <div class="row align-items-center text-center text-md-start">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h4 id="profName" class="fw-bold text-white mb-1">...</h4>
+                <p id="profPhone" class="text-secondary mb-2 small"><i class="fas fa-phone-alt me-1"></i> ...</p>
+            </div>
+            <div class="col-md-6">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <small class="opacity-50" style="font-size: 0.65rem;">إجمالي الفواتير</small>
+                            <div class="stat-val" id="totalSpent">0</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box" style="border-color: #f8514933;">
+                            <small class="opacity-50" style="font-size: 0.65rem;">المديونية الحالية</small>
+                            <div class="stat-val text-danger" id="currentDebt">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card border-success border-opacity-25 no-print">
+        <h6 class="fw-bold text-success mb-3 small"><i class="fas fa-hand-holding-usd me-2"></i> تسجيل تحصيل نقدية (دفعة حساب)</h6>
+        <div class="row g-2">
+            <div class="col-md-4 col-12">
+                <input type="number" id="payAmount" class="form-control" placeholder="المبلغ بالجنيه">
+            </div>
+            <div class="col-md-4 col-12">
+                 <label class="small opacity-50 mb-1">وسيلة الدفع</label>
+                <select id="payMethod" class="form-select shadow-none">
+                    <option value="كاش">💵 كاش (نقدي)</option>
+                    <option value="فودافون كاش">📱 فودافون كاش</option>
+                    <option value="انستا باي">⚡ انستا باي</option>
+                    <option value="تحويل بنكي">🏦 تحويل بنكي</option>
+                </select>
+            </div>
+            <div class="col-md-4 col-12">
+                <button class="btn btn-success w-100 fw-bold" onclick="makePayment()">تأكيد العملية</button>
+            </div>
+            <div class="col-12 mt-2">
+                <input type="text" id="payNote" class="form-control form-control-sm" placeholder="اكتب ملاحظاتك هنا...">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card p-0 overflow-hidden">
+        <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center no-print">
+            <h6 class="m-0 fw-bold small"><i class="fas fa-history me-2 text-warning"></i> حركات العميل المالية</h6>
+            <span class="badge bg-secondary" id="invCount" style="font-size: 0.6rem;">0 عملية</span>
+        </div>
+        <div id="historyLog" class="p-3">
+            <div class="text-center opacity-20 py-5">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <div id="printFooter">
+        تيرة محطة ٥ - مركز الحامول - كفرالشيخ | نظام Al-Nada Pro لإدارة الحسابات
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+  authDomain: "elzyady-da509.firebaseapp.com",
+  projectId: "elzyady-da509",
+  storageBucket: "elzyady-da509.firebasestorage.app",
+  messagingSenderId: "242117738897",
+  appId: "1:242117738897:web:d658d6ca335b316f7f9a30",
+  measurementId: "G-JPRK3BT495"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerName = urlParams.get('name'); // استقبال الاسم من الرابط
+    const customerPhone = urlParams.get('phone');
+
+    window.makePayment = async function() {
+        const amount = parseFloat(document.getElementById('payAmount').value);
+        const method = document.getElementById('payMethod').value;
+        const note = document.getElementById('payNote').value || "سداد مديونية";
+        if(!amount || amount <= 0 || !customerName) { alert("أدخل بيانات صحيحة"); return; }
+        try {
+            await addDoc(collection(db, "payments"), {
+                customerName: customerName, // الحفظ بالاسم لضمان الفلترة
+                customerPhone: customerPhone,
+                amount: amount, 
+                method: method,
+                timestamp: serverTimestamp(), 
+                note: note
+            });
+            alert("تم التسجيل ✅");
+            loadCustomerProfile();
+        } catch(e) { alert("خطأ!"); }
+    }
+
+    async function loadCustomerProfile() {
+        if(!customerName) return;
+        const cleanName = customerName.trim();
+        let totalRequired = 0;
+        let totalPaid = 0;
+        let history = [];
+
+        // 1. جلب الفواتير المفلترة بالاسم
+        const invSnap = await getDocs(collection(db, "invoices"));
+        invSnap.forEach(doc => {
+            const data = doc.data();
+            const invCustName = (data.customer && data.customer.name) ? data.customer.name.trim() : (data.customerName ? data.customerName.trim() : "");
+            
+            if(invCustName === cleanName) {
+                totalRequired += parseFloat(data.total || data.grandTotal || 0);
+                totalPaid += parseFloat(data.paid || 0);
+                history.push({ type: 'invoice', id: doc.id, ...data });
+            }
+        });
+
+        // 2. جلب دفعات الحساب المفلترة بالاسم
+        const paySnap = await getDocs(collection(db, "payments"));
+        paySnap.forEach(doc => {
+            const data = doc.data();
+            const payCustName = data.customerName ? data.customerName.trim() : "";
+            
+            if(payCustName === cleanName) {
+                totalPaid += parseFloat(data.amount || 0);
+                history.push({ type: 'payment', id: doc.id, ...data });
+            }
+        });
+
+        // ترتيب الحركات (الأحدث أولاً)
+        history.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+        // تحديث الواجهة
+        document.getElementById('profName').innerText = cleanName;
+        document.getElementById('printCustName').innerText = cleanName;
+        document.getElementById('profPhone').innerHTML = `<i class="fas fa-phone-alt me-2"></i> ${customerPhone || '---'}`;
+        document.getElementById('totalSpent').innerText = totalRequired.toLocaleString();
+        document.getElementById('currentDebt').innerText = (totalRequired - totalPaid).toLocaleString();
+        document.getElementById('invCount').innerText = `${history.length} حركات`;
+
+        const log = document.getElementById('historyLog');
+        log.innerHTML = '';
+        
+        if(history.length === 0) {
+            log.innerHTML = '<div class="text-center opacity-20 py-5">لا توجد حركات مسجلة</div>';
+            return;
+        }
+
+        history.forEach(item => {
+            const date = item.timestamp?.toDate().toLocaleDateString('ar-EG') || '---';
+            if(item.type === 'invoice') {
+                log.innerHTML += `
+                    <div class="history-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold small text-white">فاتورة صيانة #${item.id.slice(-5)}</div>
+                                <small class="opacity-50 d-block" style="font-size:0.65rem;">${date}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-info small">+ ${parseFloat(item.total || item.grandTotal || 0).toLocaleString()}</div>
+                                <a href="pos6.html?id=${item.id}" class="btn btn-sm btn-outline-info border-0 no-print" style="font-size:0.7rem;">
+                                    <i class="fas fa-external-link-alt me-1"></i> عرض
+                                </a>
+                            </div>
+                        </div>
+                        ${item.paid > 0 ? `
+                            <div class="nested-payment">
+                                ↳ تم دفع مبلغ <strong>${item.paid} EGP</strong> وقت الفاتورة
+                            </div>
+                        ` : ''}
+                    </div>`;
+            } else {
+                log.innerHTML += `
+                    <div class="history-item payment-row d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold small text-success">دفعة حساب (${item.method})</div>
+                            <small class="opacity-50 d-block" style="font-size:0.65rem;">${date}</small>
+                            <small class="text-secondary italic" style="font-size:0.7rem;">${item.note || ''}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-success small">- ${parseFloat(item.amount || 0).toLocaleString()}</div>
+                            <span class="method-badge no-print">${item.method}</span>
+                        </div>
+                    </div>`;
+            }
+        });
+    }
+    loadCustomerProfile();
+</script>
+</body>
+</html>

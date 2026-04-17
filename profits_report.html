@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warchat Pro - تقارير الأرباح</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+    <style>
+        :root { 
+            --bg: #0d1117; 
+            --glass: rgba(255,255,255,0.05); 
+            --neon-green: #3fb950; 
+            --neon-blue: #58a6ff; 
+            --card-border: rgba(255,255,255,0.1);
+        }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
+        
+        /* كروت الإحصائيات */
+        .glass-card { 
+            background: var(--glass); 
+            border: 1px solid var(--card-border); 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+        .glass-card:hover { transform: translateY(-5px); border-color: var(--neon-blue); }
+        .stat-val { font-size: 1.6rem; font-weight: 700; color: var(--neon-green); margin-top: 10px; }
+
+        /* ستايل الجدول الزجاجي */
+        .table-glass { 
+            background: var(--glass); 
+            border-radius: 20px; 
+            overflow: hidden; 
+            border: 1px solid var(--card-border); 
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .table { color: #c9d1d9; margin-bottom: 0; vertical-align: middle; }
+        .table thead { background: rgba(88, 166, 255, 0.1); }
+        .table thead th { 
+            color: #fff; 
+            background: rgba(88, 166, 255, 0.2);
+            font-weight: 700; 
+            border: none !important; 
+            padding: 15px 10px !important;
+            font-size: 0.9rem;
+        }
+        .table tbody td { 
+            padding: 10px 10px !important; 
+            border-bottom: 1px solid rgba(000,000,000,0.2) !important; 
+            font-size: 0.9rem;
+        }
+        th, td { vertical-align:middle; white-space:nowrap; padding: 12px 8px !important; border:none !important; }
+        .table tbody tr:last-child td { border: none !important; }
+        .table-hover tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+        /* تنسيقات خاصة بالبيانات */
+        .date-badge { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; color: #8b949e; }
+        .profit-positive { color: var(--neon-green); font-weight: 800; }
+        .total-sell { color: #fff; font-weight: 600; }
+        .client-name { color: #e3b341; font-weight: 600; }
+        
+        .btn-back { color: #c9d1d9; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .btn-back:hover { color: var(--neon-blue); }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <a href="index1.html" class="btn-back"><i class="fas fa-arrow-right me-2"></i> العودة للرئيسية</a>
+        <h4 class="fw-bold mb-0 text-white">تحليل الأرباح الصافية</h4>
+    </header>
+
+    <div class="row g-3 mb-4 text-center">
+        <div class="col-6">
+            <div class="glass-card" style="border-bottom: 3px solid var(--neon-green);">
+                <i class="fas fa-sack-dollar mb-1 text-success" style="font-size: 1.2rem;"></i>
+                <small class="d-block opacity-50">صافي أرباح اليوم</small>
+                <div class="stat-val" id="dayProfit">0 EGP</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="glass-card" style="border-bottom: 3px solid var(--neon-blue);">
+                <i class="fas fa-chart-line mb-1 text-info" style="font-size: 1.2rem;"></i>
+                <small class="d-block opacity-50">صافي أرباح الشهر</small>
+                <div class="stat-val text-info" id="monthProfit">0 EGP</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center mb-3 px-2">
+        <i class="fas fa-list-ul me-2 text-primary"></i>
+        <h6 class="mb-0 fw-bold">سجل أرباح الفواتير (البيع - الشراء)</h6>
+    </div>
+
+    <div class="table-glass">
+        <div class="table-responsive">
+            <table class="table text-center table-hover">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th class="text-start">العميل</th>
+                        <th>إجمالي البيع</th>
+                        <th>صافي الربح</th>
+                    </tr>
+                </thead>
+                <tbody id="profitTableBody">
+                    <tr><td colspan="4" class="py-5 opacity-50">جاري جلب البيانات وحساب الأرباح...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+  authDomain: "elzyady-da509.firebaseapp.com",
+  projectId: "elzyady-da509",
+  storageBucket: "elzyady-da509.firebasestorage.app",
+  messagingSenderId: "242117738897",
+  appId: "1:242117738897:web:d658d6ca335b316f7f9a30",
+  measurementId: "G-JPRK3BT495"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function calculateProfits() {
+        const today = new Date();
+        const todayStr = today.toLocaleDateString('en-US');
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        let totalDayProfit = 0;
+        let totalMonthProfit = 0;
+
+        try {
+            // جلب الفواتير مرتبة من الأحدث
+            const invSnap = await getDocs(query(collection(db, "invoices"), orderBy("timestamp", "desc")));
+            const tableBody = document.getElementById('profitTableBody');
+            tableBody.innerHTML = '';
+            
+            let reports = [];
+
+            invSnap.forEach(doc => {
+                const data = doc.data();
+                const dateObj = data.timestamp?.toDate() || new Date(0);
+                const dateStr = dateObj.toLocaleDateString('en-US');
+                
+                let invoiceProfit = 0;
+
+                // الحسبة بناءً على حقل buy لكل صنف في الفاتورة
+                if (data.items && Array.isArray(data.items)) {
+                    data.items.forEach(item => {
+                        // استخدام السعر المسجل في الفاتورة (بيع) وسعر الشراء المخزن (buy)
+                        const sPrice = parseFloat(item.price || item.sellPrice || 0);
+                        const bPrice = parseFloat(item.buy || 0);
+                        
+                        invoiceProfit += (sPrice - bPrice);
+                    });
+                }
+
+                // تجميع الأرباح لليوم والشهر
+                if (dateStr === todayStr) totalDayProfit += invoiceProfit;
+                if (dateObj.getMonth() === currentMonth && dateObj.getFullYear() === currentYear) {
+                    totalMonthProfit += invoiceProfit;
+                }
+
+                reports.push({
+                    date: dateObj.toLocaleDateString('ar-EG', {day:'numeric', month:'short'}),
+                    customer: data.customer?.name || data.customerName || "عميل عام",
+                    total: parseFloat(data.total || data.grandTotal || 0),
+                    profit: invoiceProfit
+                });
+            });
+
+            if (reports.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="py-5 opacity-50">لا توجد فواتير مسجلة حتى الآن</td></tr>';
+            } else {
+                reports.forEach(r => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td><span class="date-badge">${r.date}</span></td>
+                            <td class="text-start client-name">${r.customer}</td>
+                            <td class="total-sell">${r.total.toLocaleString()}</td>
+                            <td class="profit-positive">+${r.profit.toLocaleString()} <small>EGP</small></td>
+                        </tr>`;
+                });
+            }
+
+            // تحديث كروت الإحصائيات
+            document.getElementById('dayProfit').innerText = totalDayProfit.toLocaleString() + " EGP";
+            document.getElementById('monthProfit').innerText = totalMonthProfit.toLocaleString() + " EGP";
+
+        } catch (e) {
+            console.error("Error: ", e);
+            tableBody.innerHTML = '<tr><td colspan="4" class="py-5 text-danger">فشل في تحميل البيانات</td></tr>';
+        }
+    }
+
+    calculateProfits();
+</script>
+</body>
+</html>
