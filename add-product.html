@@ -8,51 +8,87 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-dark: #0d1117; --glass: rgba(255,255,255,0.05); --neon: #58a6ff; }
-        body { background: var(--bg-dark); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding: 10px; }
-        .glass-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(10px); }
-        .section-title { font-size: 0.9rem; font-weight: 700; color: var(--neon); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(88, 166, 255, 0.2); padding-bottom: 10px; }
+        :root { 
+            --accent: #0b5e3d;         /* الأخضر الغامق */
+            --header-bg: #0b5e3d;
+            --gold: #f2ca30;           /* الذهبي للتمييز */
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+        }
         
-        /* تعديل الحقول للوضوح التام أثناء الكتابة */
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 30px; }
+        
+        /* --- Header المعدل --- */
+        .header-nav {
+            position: sticky; top: 0; z-index: 1000; 
+            background: var(--header-bg); padding: 12px 15px; 
+            margin-bottom: 20px; color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .glass-card { 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 20px; margin-bottom: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+        }
+
+        .section-title { 
+            font-size: 0.9rem; font-weight: 700; color: var(--accent); 
+            margin-bottom: 15px; display: flex; align-items: center; gap: 10px; 
+            border-bottom: 1px solid var(--border); padding-bottom: 10px; 
+        }
+        
         .form-control, .form-select { 
-            background: rgba(0,0,0,0.3) !important; 
-            border: 1px solid rgba(255,255,255,0.1) !important; 
-            color: #fff !important; 
+            background: #fdfdfd !important; 
+            border: 1px solid var(--border) !important; 
+            color: var(--text-primary) !important; 
             border-radius: 12px; 
             padding: 10px; 
             transition: 0.3s;
         }
         .form-control:focus {
-            border-color: var(--neon) !important;
-            background: rgba(88, 166, 255, 0.05) !important;
-            box-shadow: none;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(11, 94, 61, 0.1);
         }
-        /* تمييز حقول الأرقام والأسعار */
+
+        /* تمييز حقول الأرقام والأسعار بالأخضر الداكن */
         input[type="number"].form-control {
-            color: #ffeb3b !important; /* لون أصفر للرؤية الواضحة */
+            color: var(--accent) !important;
             font-weight: bold;
         }
 
-        label { margin-bottom: 8px; font-size: 0.85rem; opacity: 0.8; }
-        .price-tag { font-size: 0.75rem; color: var(--neon); display: block; margin-bottom: 8px; }
-        .btn-save { background: linear-gradient(45deg, #58a6ff, #bc8cff) !important; border: none !important; color: white !important; padding: 15px; border-radius: 15px; font-weight: 700; }
+        label { margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; opacity: 0.9; }
+        .price-tag { font-size: 0.75rem; color: var(--accent); display: block; margin-bottom: 8px; font-weight: 700; }
         
-        .header-nav {
-            position: sticky; top: 0; z-index: 1000; background: var(--bg-dark); padding: 5px 0; margin-bottom: 15px;
+        .btn-save { 
+            background: var(--accent) !important; 
+            border: none !important; 
+            color: white !important; 
+            padding: 15px; 
+            border-radius: 15px; 
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(11, 94, 61, 0.2);
         }
+
+        .btn-outline-light { border-color: rgba(255,255,255,0.5); }
+        .btn-outline-info { color: var(--accent); border-color: var(--accent); }
+        .btn-outline-info:hover { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
-<div class="container py-3">
-    <div class="header-nav d-flex justify-content-between align-items-center mb-4">
-        <h5 class="fw-bold m-0" id="formTitle"><i class="fas fa-plus-circle text-info me-2"></i> إضافة صنف جديد</h5>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-warning btn-sm" onclick="resetForm()" id="cancelEdit" style="display:none;">إلغاء التعديل</button>
-            <a href="javascript:void(0)" onclick="confirmBack()" class="btn btn-outline-light btn-sm"><i class="fas fa-arrow-right"></i></a>
-        </div>
+<div class="header-nav">
+    <h5 class="fw-bold m-0" id="formTitle"><i class="fas fa-plus-circle me-2"></i> إضافة صنف جديد</h5>
+    <div class="d-flex gap-2">
+        <button class="btn btn-warning btn-sm" onclick="resetForm()" id="cancelEdit" style="display:none; font-weight: 600;">إلغاء التعديل</button>
+        <a href="javascript:void(0)" onclick="confirmBack()" class="btn btn-outline-light btn-sm"><i class="fas fa-arrow-right"></i></a>
     </div>
+</div>
 
+<div class="container">
     <input type="hidden" id="editId">
 
     <div class="glass-card">
@@ -92,11 +128,11 @@
                 <input type="number" id="pSell" class="form-control border-info" placeholder="0.00" oninput="isChanged=true">
             </div>
             <div class="col-md-4">
-                <label class="price-tag" style="color:#f2ca30">سعر بيع الكرتونة (جملة)</label>
+                <label class="price-tag" style="color:var(--gold)">سعر بيع الكرتونة (جملة)</label>
                 <input type="number" id="pSell2" class="form-control" placeholder="0.00" oninput="isChanged=true">
             </div>
             <div class="col-md-4">
-                <label class="price-tag" style="color:#ff7b72">سعر بيع الكرتونة (خاص)</label>
+                <label class="price-tag" style="color:#d9534f">سعر بيع الكرتونة (خاص)</label>
                 <input type="number" id="pSell3" class="form-control" placeholder="0.00" oninput="isChanged=true">
             </div>
         </div>
@@ -148,9 +184,8 @@
 
     let originalTotalPcs = 0; 
     let originalQtyInCrates = 0; 
-    window.isChanged = false; // تتبع التغييرات
+    window.isChanged = false;
 
-    // تنبيه قبل الخروج
     window.onbeforeunload = function() {
         if (window.isChanged) return "هل أنت متأكد من الخروج؟ هناك بيانات لم تحفظ.";
     };
@@ -189,7 +224,7 @@
 
         if (editId) {
             document.getElementById('editId').value = editId;
-            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit text-warning me-2"></i> تعديل صنف حالي';
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i> تعديل صنف حالي';
             document.getElementById('saveBtn').innerHTML = '<i class="fas fa-sync me-2"></i> تحديث بيانات الصنف';
             document.getElementById('cancelEdit').style.display = 'block';
 
@@ -213,7 +248,7 @@
                 document.getElementById('pCategoryNew').value = data.category || '';
                 document.getElementById('pUnitName').value = data.unitName || '';
                 document.getElementById('pFactor').value = factor;
-                window.isChanged = false; // تصفير التغيير بعد التحميل في وضع التعديل
+                window.isChanged = false;
             }
         }
     }

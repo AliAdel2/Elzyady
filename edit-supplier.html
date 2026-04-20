@@ -3,54 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تعديل بيانات المورد</title>
+    <title>تعديل بيانات المورد - شركة الزيادي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-orange: #f0883e; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 40px; }
-        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .edit-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 600px; margin: auto; }
-        .form-label { font-size: 0.85rem; margin-bottom: 6px; color: var(--neon-blue); font-weight: 600; padding-right: 5px; }
-        .form-control { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 12px; margin-bottom: 18px; }
-        .form-control:focus { background: rgba(255,255,255,0.08); border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 10px rgba(88, 166, 255, 0.2); outline: none; }
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --neon-blue: #007bff; 
+            --neon-orange: #f0883e; 
+        }
+        
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 40px; }
+        
+        .header-nav { 
+            padding: 15px 20px; background: var(--header-bg); color: white;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .edit-card { 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 25px; padding: 25px; margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px; margin-left: auto; margin-right: auto;
+        }
+
+        .form-label { font-size: 0.85rem; margin-bottom: 6px; color: var(--accent); font-weight: 700; }
+        .form-control { 
+            background: #fdfdfd !important; border: 1px solid var(--border) !important; 
+            color: var(--text-primary) !important; border-radius: 12px; padding: 12px; margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 10px rgba(11, 94, 61, 0.1); }
+        .form-control:disabled { background: #f1f3f2 !important; color: #444 !important; font-weight: bold; border-style: dashed !important; }
+
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn-save { background: linear-gradient(45deg, #007bff, #00d4ff); border: none; border-radius: 15px; padding: 14px; font-weight: 700; width: 100%; margin-top: 15px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); color: #fff; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .section-title { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; margin-top: 10px; }
+        
+        .btn-save { 
+            background: var(--accent); border: none; border-radius: 15px; 
+            padding: 15px; font-weight: 700; width: 100%; margin-top: 10px;
+            color: white; box-shadow: 0 4px 12px rgba(11, 94, 61, 0.2); transition: 0.3s;
+        }
+        .btn-save:active { transform: scale(0.98); }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-light); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        
+        .section-title { 
+            font-size: 0.75rem; color: #707b7c; font-weight: 800; 
+            text-transform: uppercase; margin-bottom: 15px; 
+            border-bottom: 2px solid var(--border); padding-bottom: 5px; 
+            display: flex; align-items: center; gap: 8px; margin-top: 10px;
+        }
+
+        .calc-box {
+            background: #fff9f0; border: 1px solid #ffeeba; border-radius: 12px;
+            padding: 12px; margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
 <div id="loader" class="loading-overlay">
-    <div class="spinner-border text-primary"></div>
-    <span class="ms-3">جاري جرد الحسابات...</span>
+    <div class="text-center">
+        <div class="spinner-border text-success mb-2"></div>
+        <div class="small fw-bold">جاري فحص حسابات المورد...</div>
+    </div>
 </div>
 
 <div class="header-nav">
-    <div style="width: 40px;"></div>
-    <h5 class="m-0 fw-bold">تعديل بيانات المورد</h5>
-    <a href="javascript:history.back()" class="text-white"><i class="fas fa-arrow-left"></i></a>
+    <a href="javascript:history.back()" class="text-white"><i class="fas fa-chevron-right"></i></a>
+    <h6 class="m-0 fw-bold">تعديل ملف المورد</h6>
+    <div style="width: 20px;"></div>
 </div>
 
 <div class="container">
     <div class="edit-card">
         <form id="editForm">
-            <div class="section-title">المعلومات الأساسية</div>
-            <label class="form-label">اسم المورد</label>
+            <div class="section-title"><i class="fas fa-truck"></i> بيانات المورد الأساسية</div>
+            
+            <label class="form-label">اسم الشركة / المورد</label>
             <input type="text" id="supName" class="form-control" required>
 
             <label class="form-label">رقم الهاتف</label>
             <input type="tel" id="supPhone" class="form-control">
 
-            <label class="form-label">العنوان</label>
+            <label class="form-label">العنوان / المقر</label>
             <input type="text" id="supAddress" class="form-control">
 
-            <div class="section-title">البيانات المالية (المحسوبة حالياً)</div>
-            <label class="form-label">الرصيد الحالي الفعلي</label>
-            <input type="number" id="supBalance" class="form-control" style="color: var(--neon-orange); font-weight: bold;" step="0.01" readonly>
-            <small class="d-block mb-3 opacity-50" style="margin-top: -15px;">* هذا الحقل للقراءة فقط (يُحسب من الحركات)</small>
+            <div class="section-title"><i class="fas fa-file-invoice-dollar"></i> الموقف المالي (محسوب)</div>
+            
+            <label class="form-label">الرصيد الفعلي الحالي</label>
+            <input type="text" id="supBalanceDisplay" class="form-control" style="color: var(--neon-orange) !important;" disabled>
+            
+            <div class="calc-box">
+                <small class="text-muted fw-bold d-block">
+                    <i class="fas fa-info-circle text-warning"></i> هذا الرصيد ناتج عن (الافتتاحي + المشتريات - المرتجعات - المدفوعات).
+                </small>
+            </div>
 
             <div class="row-grid">
                 <div>
@@ -63,7 +119,9 @@
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" class="btn btn-save">حفظ التغييرات</button>
+            <button type="submit" id="submitBtn" class="btn btn-save">
+                <i class="fas fa-check-circle me-1"></i> حفظ التغييرات
+            </button>
         </form>
     </div>
 </div>
@@ -86,15 +144,14 @@
     const urlParams = new URLSearchParams(window.location.search);
     const supId = urlParams.get('id');
 
-    // دالة جرد الحسابات (نفس منطق صفحة القائمة)
     async function calculateSupplierBalance(supId, openingBal) {
         const qTrans = query(collection(db, "transactions"), where("partyId", "==", supId));
         const snapTrans = await getDocs(qTrans);
         const qItems = query(collection(db, "supplier_transactions"), where("supplierId", "==", supId));
         const snapItems = await getDocs(qItems);
 
-        let debt = 0;   // علينا
-        let credit = 0; // لنا
+        let debt = 0;   // التزامات (علينا)
+        let credit = 0; // مدفوعات (لنا)
 
         snapTrans.forEach(doc => {
             const d = doc.data();
@@ -127,9 +184,8 @@
                 document.getElementById('supOpening').value = data.openingBalance || 0;
                 document.getElementById('supLimit').value = data.creditLimit || 0;
 
-                // حساب الرصيد الفعلي فوراً
                 const realBalance = await calculateSupplierBalance(supId, data.openingBalance);
-                document.getElementById('supBalance').value = realBalance;
+                document.getElementById('supBalanceDisplay').value = realBalance.toLocaleString() + " ج.م";
             }
             document.getElementById('loader').style.display = 'none';
         } catch (error) {
@@ -142,24 +198,24 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerHTML = 'جاري الحفظ...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ...';
 
         try {
             const docRef = doc(db, "suppliers", supId);
-            // تحديث البيانات الأساسية (الرصيد الحالي لا يُعدل يدوياً بل يُحسب من الحركات)
             await updateDoc(docRef, {
-                name: document.getElementById('supName').value,
-                phone: document.getElementById('supPhone').value,
-                address: document.getElementById('supAddress').value,
+                name: document.getElementById('supName').value.trim(),
+                phone: document.getElementById('supPhone').value.trim(),
+                address: document.getElementById('supAddress').value.trim(),
                 openingBalance: Number(document.getElementById('supOpening').value),
                 creditLimit: Number(document.getElementById('supLimit').value)
             });
 
-            alert("تم التعديل بنجاح");
+            alert("تم تحديث بيانات المورد بنجاح");
             window.location.href = `supplier-details.html?id=${supId}`;
         } catch (error) {
-            alert("خطأ في الحفظ");
+            alert("فشل في حفظ التعديلات");
             btn.disabled = false;
+            btn.innerHTML = 'حفظ التغييرات';
         }
     });
 
