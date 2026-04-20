@@ -3,87 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ديون متأخرة - Masar</title>
+    <title>ديون متأخرة - شركة الزيادي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --bg-dark: #0d1117; 
-            --glass: rgba(255,255,255,0.05); 
-            --neon-red: #ff4757;
-            --neon-orange: #ffa502;
-            --text-gray: #c9d1d9;
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --text-muted: #707b7c;
+            --danger-red: #d90429;
         }
         
-        body { background: var(--bg-dark); font-family: 'Cairo', sans-serif; color: var(--text-gray); }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 30px; }
         
         .header { 
-            background: rgba(13, 17, 23, 0.9); padding: 20px; 
-            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: var(--header-bg); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
+            position: sticky; top: 0; z-index: 1000;
         }
 
-        /* كارت إجمالي المديونيات الجديد */
         .total-debt-card {
-            background: linear-gradient(135deg, rgba(255, 71, 87, 0.2) 0%, rgba(13, 17, 23, 0.1) 100%);
-            border: 1px solid rgba(255, 71, 87, 0.3);
-            border-radius: 20px; padding: 25px; margin-top: 20px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 25px; padding: 25px; margin-top: 15px;
+            text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            border-bottom: 5px solid var(--danger-red);
         }
-        .total-amount { color: var(--neon-red); font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
+        .total-amount { color: var(--danger-red); font-size: 2.3rem; font-weight: 800; line-height: 1; margin: 10px 0; }
 
         .alert-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed rgba(255,255,255,0.1);
+            background: #fff4f5;
+            border: 1px solid #ffccd5;
             border-radius: 15px; padding: 12px; margin-top: 15px;
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; gap: 12px; color: #a4133c;
         }
 
         .late-item {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 18px; padding: 15px; margin-bottom: 12px;
-            position: relative; overflow: hidden;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 20px; padding: 15px; margin-bottom: 12px;
+            position: relative; transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
-        .late-item::before {
-            content: ''; position: absolute; right: 0; top: 0; bottom: 0;
-            width: 4px; background: var(--neon-red);
-        }
+        .late-item:active { transform: scale(0.98); }
 
         .days-badge {
-            background: rgba(255, 71, 87, 0.2); color: var(--neon-red);
-            padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: bold;
+            background: #fff0f3; color: var(--danger-red);
+            padding: 4px 12px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+            border: 1px solid #ffccd5;
         }
 
         .btn-remind {
             background: #25d366; color: white !important; border: none;
-            padding: 8px 15px; border-radius: 10px; font-size: 0.85rem;
-            display: flex; align-items: center; gap: 5px; text-decoration: none;
+            padding: 8px 18px; border-radius: 12px; font-size: 0.85rem; font-weight: 700;
+            display: flex; align-items: center; gap: 8px; text-decoration: none;
+            transition: 0.3s;
         }
+        .btn-remind:hover { background: #1eb954; }
+
+        .client-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
     </style>
 </head>
 <body>
 
-<div class="header d-flex justify-content-between align-items-center">
+<div class="header">
     <i class="fas fa-chevron-right text-white" style="cursor:pointer" onclick="history.back()"></i>
-    <h5 class="m-0 fw-bold">التحصيل والديون</h5>
-    <i class="fas fa-exclamation-triangle text-danger"></i>
+    <h6 class="m-0 fw-bold">التحصيل والديون</h6>
+    <i class="fas fa-exclamation-triangle text-white"></i>
 </div>
 
 <div class="container pb-4">
     <div class="total-debt-card">
-        <small class="opacity-50 d-block mb-1 text-uppercase" style="letter-spacing: 1px;">إجمالي المتأخرات المطلوبة</small>
+        <span class="text-muted small fw-bold">إجمالي مديونيات العملاء</span>
         <div class="total-amount" id="grandTotalDebt">0.00</div>
-        <small class="text-white-50">جنيه مصري</small>
+        <span class="badge bg-light text-dark border">جنيه مصري</span>
     </div>
 
     <div class="alert-card">
-        <i class="fas fa-info-circle text-info"></i>
-        <small class="opacity-70">يتم حساب المديونية بناءً على (الافتتاحي + الفواتير - المقبوضات).</small>
+        <i class="fas fa-info-circle"></i>
+        <small class="fw-bold">يتم الحساب تلقائياً بناءً على العمليات السابقة لكل عميل.</small>
     </div>
 
     <div id="lateList" class="mt-4">
-        <div class="text-center opacity-50 my-5">
-            <div class="spinner-border spinner-border-sm text-danger"></div> جاري فحص الحسابات...
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status"></div>
+            <div class="mt-2 text-muted">جاري فحص المديونيات...</div>
         </div>
     </div>
 </div>
@@ -118,7 +127,7 @@
             const transactions = transSnap.docs.map(d => d.data());
             const today = new Date();
             const lateReport = [];
-            let totalOverall = 0; // متحيّر لحساب المجموع الكلي
+            let totalOverall = 0;
 
             custSnap.forEach(cDoc => {
                 const cId = cDoc.id;
@@ -145,10 +154,8 @@
                 const opening = Number(cData.initialBalance) || 0;
                 const totalDebt = opening + invSum + transEffect;
 
-                // فقط لو العميل عليه مديونية حقيقية
                 if (totalDebt > 1) {
-                    totalOverall += totalDebt; // إضافة لمجموع الكارت العلوي
-                    
+                    totalOverall += totalDebt;
                     let debtAge = oldestInvDays;
                     if (opening > 0 && debtAge === 0) debtAge = 30;
 
@@ -162,28 +169,26 @@
                 }
             });
 
-            // تحديث رقم الكارت العلوي
             grandTotalDisplay.innerText = totalOverall.toLocaleString('en-US', { minimumFractionDigits: 2 });
-
             lateReport.sort((a, b) => b.age - a.age);
 
             list.innerHTML = '';
             lateReport.forEach(client => {
                 list.innerHTML += `
-                    <div class="late-item" onclick="window.location.href='customer-details.html?id=${client.id}'" style="cursor:pointer">
+                    <div class="late-item" onclick="window.location.href='customer-details.html?id=${client.id}'">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <div class="fw-bold text-white mb-1">${client.name}</div>
+                                <div class="client-name mb-1">${client.name}</div>
                                 <span class="days-badge">منذ ${client.age >= 30 ? '30+' : client.age} يوم</span>
                             </div>
                             <div class="text-end">
                                 <div class="text-danger fw-bold fs-5">${client.totalDebt.toLocaleString()}</div>
-                                <small class="opacity-50">EGP</small>
+                                <small class="text-muted">ج.م</small>
                             </div>
                         </div>
                         <hr class="opacity-10 my-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted"><i class="fas fa-user-clock me-1"></i> مديونية شاملة</small>
+                            <small class="text-muted"><i class="fas fa-history me-1"></i> مديونية تراكمية</small>
                             <a href="https://wa.me/2${client.phone}?text=تحية طيبة أستاذ ${client.name}، نذكر سيادتكم بوجود مديونية مستحقة قدرها ${client.totalDebt} ج.م. نرجو التكرم بالسداد في أقرب وقت." 
                                class="btn-remind" target="_blank" onclick="event.stopPropagation()">
                                 <i class="fab fa-whatsapp"></i> تذكير
@@ -194,12 +199,11 @@
             });
 
             if (lateReport.length === 0) {
-                list.innerHTML = '<div class="text-center opacity-30 my-5">لا يوجد ديون متأخرة</div>';
+                list.innerHTML = '<div class="text-center opacity-30 my-5">لا يوجد مديونيات متأخرة حالياً ✅</div>';
             }
 
         } catch (e) {
-            console.error(e);
-            list.innerHTML = `<div class="text-danger text-center py-5">خطأ في التحميل</div>`;
+            list.innerHTML = `<div class="text-danger text-center py-5">حدث خطأ في جلب البيانات</div>`;
         }
     }
 

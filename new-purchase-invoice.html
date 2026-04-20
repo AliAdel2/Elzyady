@@ -8,37 +8,89 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-red: #f85149; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 120px; }
-        .header-section { padding: 15px 20px; background: var(--glass); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .data-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-top: 20px; }
-        .form-control, .form-select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 12px; padding: 10px; font-size: 0.9rem; }
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --text-muted: #707b7c;
+        }
+
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 120px; }
         
-        .item-row { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 18px; margin-bottom: 15px; position: relative; }
-        .btn-remove { position: absolute; top: -8px; left: -8px; background: var(--neon-red); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; z-index: 10; border: 2px solid var(--bg); box-shadow: 0 0 10px rgba(248,81,73,0.3); }
+        .header { 
+            background: var(--header-bg); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .data-card { 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 15px; margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .form-control, .form-select { 
+            background: var(--white) !important; border: 1px solid var(--border) !important; 
+            color: var(--text-primary) !important; border-radius: 12px; 
+            padding: 10px; font-size: 0.9rem; font-weight: 600;
+        }
+        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 8px rgba(11, 94, 61, 0.1) !important; }
         
-        .add-item-btn { background: transparent; color: var(--neon-blue); border: 1px dashed var(--neon-blue); width: 100%; padding: 12px; border-radius: 12px; font-weight: 600; transition: 0.3s; }
-        .invoice-footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(22, 27, 34, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-        .amount { font-size: 1.5rem; font-weight: 800; color: #fff; }
-        .btn-save { background: var(--neon-blue); color: #fff; border: none; padding: 12px 35px; border-radius: 15px; font-weight: 700; }
+        .item-row { 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 18px; margin-bottom: 15px; 
+            position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border-right: 5px solid var(--accent);
+        }
         
-        label { font-size: 0.7rem; margin-bottom: 4px; opacity: 0.6; display: flex; align-items: center; gap: 4px; }
-        label i { color: var(--neon-blue); font-size: 0.8rem; }
+        .btn-remove { 
+            position: absolute; top: -8px; left: -8px; background: #dc3545; 
+            color: #fff; width: 28px; height: 28px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.8rem; cursor: pointer; z-index: 10; border: 2px solid white; 
+        }
         
-        .subtotal-display { background: rgba(88, 166, 255, 0.1); border-radius: 10px; padding: 5px 12px; border: 1px solid rgba(88, 166, 255, 0.2); }
+        .add-item-btn { 
+            background: #f0f6f3; color: var(--accent); border: 2px dashed var(--accent); 
+            width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; transition: 0.3s; 
+        }
+        .add-item-btn:hover { background: var(--accent); color: white; }
+
+        .invoice-footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: white; padding: 15px 20px; 
+            border-top: 1px solid var(--border); display: flex; 
+            justify-content: space-between; align-items: center; z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+        }
+
+        .amount { font-size: 1.6rem; font-weight: 800; color: var(--accent); font-family: 'Consolas', monospace; }
+        .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px 35px; border-radius: 15px; font-weight: 700; }
+        
+        label { font-size: 0.75rem; margin-bottom: 5px; color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 4px; }
+        
+        .subtotal-display { 
+            background: #f8faf9; border-radius: 10px; padding: 5px 12px; 
+            border: 1px solid var(--border); color: var(--accent); font-weight: 800;
+        }
+        .badge-new { background: white; color: var(--accent); padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
 <datalist id="productsData"></datalist>
 
-<div class="header-section">
+<div class="header">
     <a href="purchase-record.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
-    <h6 class="m-0 fw-bold" id="mainTitle">فاتورة شراء - شركة الزيادى</h6>
-    <div id="statusBadge" class="badge bg-primary">جديدة</div>
+    <h6 class="m-0 fw-bold" id="mainTitle">فاتورة شراء</h6>
+    <div id="statusBadge" class="badge-new">جديدة</div>
 </div>
 
-<div class="container">
+<div class="container mt-2">
     <div class="data-card">
         <div class="row g-3">
             <div class="col-12">
@@ -59,7 +111,7 @@
         </div>
     </div>
 
-    <div id="itemsList" class="mt-4"></div>
+    <div id="itemsList" class="mt-3"></div>
 
     <button type="button" class="add-item-btn mt-2" id="addItemBtn">
         <i class="fas fa-plus me-1"></i> إضافة صنف للفاتورة
@@ -68,7 +120,7 @@
 
 <div class="invoice-footer">
     <div class="total-info">
-        <span class="d-block small opacity-50 text-end">إجمالي الفاتورة</span>
+        <span class="d-block small text-muted">إجمالي الفاتورة</span>
         <span class="amount" id="finalTotal">0.00</span>
     </div>
     <button class="btn-save" id="btnSaveInvoice">حفظ وترحيل</button>
@@ -92,7 +144,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');
-    const orderId = urlParams.get('orderId'); // استقبال الـ ID القادم من صفحة الطلبيات
+    const orderId = urlParams.get('orderId'); 
 
     let allInventory = [];
 
@@ -112,7 +164,6 @@
             prodDataList.innerHTML += `<option value="${data.name}">`;
         });
         
-        // التحقق من حالة الصفحة: تعديل أم استلام طلبية أم فاتورة جديدة
         if (editId) { 
             await loadInvoiceForEdit(); 
         } else if (orderId) {
@@ -122,17 +173,15 @@
         }
     }
 
-    // دالة جلب بيانات الطلبية وتحويلها لفاتورة
     async function loadOrderData(id) {
         try {
             const orderSnap = await getDoc(doc(db, "purchase_orders", id));
             if (orderSnap.exists()) {
                 const data = orderSnap.data();
                 document.getElementById('supplierSelect').value = data.supplierId;
-                document.getElementById('itemsList').innerHTML = ""; // مسح الصفوف الفارغة
+                document.getElementById('itemsList').innerHTML = ""; 
                 
                 data.items.forEach(item => {
-                    // محاولة جلب بيانات الصنف من المخزن لتعبئة المعامل والوحدة والسعر
                     const invItem = allInventory.find(p => p.name === item.name);
                     addNewItemRow({
                         name: item.name,
@@ -148,10 +197,9 @@
     }
 
     async function loadInvoiceForEdit() {
-        document.getElementById('mainTitle').innerText = "تعديل فاتورة مشتريات";
-        document.getElementById('statusBadge').innerText = "وضع التعديل";
-        document.getElementById('statusBadge').className = "badge bg-warning text-dark";
-        document.getElementById('btnSaveInvoice').innerText = "تحديث البيانات";
+        document.getElementById('mainTitle').innerText = "تعديل الفاتورة";
+        document.getElementById('statusBadge').innerText = "تعديل";
+        document.getElementById('statusBadge').className = "badge-new bg-warning text-dark";
 
         const invRef = doc(db, "supplier_transactions", editId);
         const invSnap = await getDoc(invRef);
@@ -175,33 +223,33 @@
                     <i class="fas fa-times"></i>
                 </div>
                 
-                <div class="row g-3">
+                <div class="row g-2">
                     <div class="col-12">
-                        <label><i class="fas fa-box"></i> اسم الصنف</label>
+                        <label>اسم الصنف</label>
                         <input type="text" list="productsData" class="form-control item-name" value="${itemData ? itemData.name : ''}" placeholder="ابحث أو اكتب اسم جديد">
                     </div>
 
                     <div class="col-4">
-                        <label><i class="fas fa-layer-group"></i> الكمية</label>
+                        <label>الكمية</label>
                         <input type="number" step="0.01" class="form-control item-qty" value="${itemData ? itemData.qty : '1'}">
                     </div>
                     <div class="col-4">
-                        <label><i class="fas fa-tag"></i> الوحدة</label>
-                        <input type="text" class="form-control item-unit" value="${itemData ? (itemData.unitName || '') : ''}" placeholder="جركن">
+                        <label>الوحدة</label>
+                        <input type="text" class="form-control item-unit" value="${itemData ? (itemData.unitName || '') : ''}" placeholder="كرتونة">
                     </div>
                     <div class="col-4">
-                        <label><i class="fas fa-calculator"></i> المعامل</label>
+                        <label>المعامل</label>
                         <input type="number" class="form-control item-factor" value="${itemData ? (itemData.unitFactor || '1') : '1'}">
                     </div>
 
                     <div class="col-6">
-                        <label><i class="fas fa-money-bill-wave"></i> سعر شراء الكرتونة</label>
+                        <label>سعر شراء الوحدة</label>
                         <input type="number" step="0.01" class="form-control item-buy" value="${itemData ? (itemData.buy || '') : ''}" placeholder="0.00">
                     </div>
                     <div class="col-6 d-flex flex-column justify-content-end align-items-end">
                         <label>الإجمالي الفرعي</label>
                         <div class="subtotal-display">
-                            <input type="text" class="item-subtotal border-0 bg-transparent text-white fw-bold text-center" style="width: 80px; outline: none;" readonly value="0.00">
+                            <input type="text" class="item-subtotal border-0 bg-transparent text-success fw-bold text-center" style="width: 80px; outline: none;" readonly value="0.00">
                         </div>
                     </div>
                 </div>
@@ -251,7 +299,7 @@
         if(!supplierId || total <= 0) return alert("برجاء إكمال بيانات الفاتورة");
 
         btn.disabled = true;
-        btn.innerText = "جاري الحفظ والترحيل...";
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري الترحيل...';
 
         try {
             const items = [];
@@ -295,7 +343,6 @@
                 timestamp: serverTimestamp()
             };
 
-            // لو الفاتورة جاية من طلبية، نحدث حالة الطلبية لتم الاستلام
             if (orderId) {
                 await updateDoc(doc(db, "purchase_orders", orderId), { status: 'received' });
             }
@@ -309,13 +356,13 @@
                 }
             }
 
-            alert("تم الحفظ بنجاح وتحديث المخزن والطلبية ✅");
+            alert("تم الترحيل وتحديث المخزن والطلبية بنجاح ✅");
             window.location.href = "purchase-invoices-list.html";
 
         } catch (e) {
-            console.error(e);
             alert("حدث خطأ أثناء الحفظ");
             btn.disabled = false;
+            btn.innerText = "حفظ وترحيل";
         }
     });
 

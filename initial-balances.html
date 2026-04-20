@@ -3,72 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أرصدة أول المدة للعملاء - Masar</title>
+    <title>أرصدة أول المدة للعملاء - شركة الزيادي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 80px; }
+        :root { 
+            --accent: #0b5e3d; /* الأخضر الداكن اللي شغالين بيه */
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+        }
         
-        .header-section { 
-            padding: 20px; background: var(--glass); backdrop-filter: blur(10px);
-            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: space-between; align-items: center;
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 100px; }
+        
+        .header { 
+            background: var(--header-bg); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
+            position: sticky; top: 0; z-index: 1000;
         }
 
         .info-alert {
-            background: rgba(88, 166, 255, 0.1); border: 1px dashed var(--neon-blue);
-            border-radius: 15px; padding: 15px; margin: 20px 0; font-size: 0.85rem; color: #58a6ff;
+            background: #fff; border: 1px dashed var(--accent);
+            border-radius: 15px; padding: 15px; margin: 15px; 
+            font-size: 0.85rem; color: var(--accent); font-weight: 600;
         }
 
         .cust-row {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 15px; margin-bottom: 10px;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 15px; padding: 15px; margin: 0 15px 10px;
             display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
-        .cust-name { font-weight: 700; font-size: 0.95rem; display: block; color: #fff; }
-        .cust-phone { font-size: 0.75rem; color: #8b949e; }
+        .cust-name { font-weight: 700; font-size: 0.95rem; display: block; color: var(--text-primary); }
+        .cust-phone { font-size: 0.75rem; color: #707b7c; }
 
-        .input-group-custom { width: 140px; }
+        .input-group-custom { width: 130px; }
         .balance-input {
-            background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.2) !important;
-            color: #fff !important; text-align: center; border-radius: 10px !important; font-weight: bold;
+            background: #f8faf9 !important; border: 1px solid var(--border) !important;
+            color: var(--accent) !important; text-align: center; border-radius: 10px !important; 
+            font-weight: 800; font-family: 'Consolas', monospace; padding: 8px;
         }
-        .balance-input:focus { border-color: var(--neon-blue) !important; box-shadow: none; }
+        .balance-input:focus { border-color: var(--accent) !important; box-shadow: 0 0 8px rgba(11, 94, 61, 0.1); outline: none; }
+
+        .search-box {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text-primary); padding: 12px; 
+            margin: 0 15px 15px; width: calc(100% - 30px); font-weight: 600;
+        }
+        .search-box:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
 
         .save-all-btn {
             position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: linear-gradient(45deg, #007bff, #00d4ff);
-            border: none; border-radius: 15px; padding: 15px; font-weight: 700;
-            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4); z-index: 1001; color: white;
+            background: var(--accent); border: none; border-radius: 18px; 
+            padding: 16px; font-weight: 700; color: white; font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(11, 94, 61, 0.3); z-index: 1001;
+            transition: 0.3s;
         }
-
-        .search-box {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; color: #fff; padding: 12px; margin-bottom: 15px; width: 100%;
-        }
-        .search-box:focus { border-color: var(--neon-blue); outline: none; }
+        .save-all-btn:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
 
-<div class="header-section">
-    <a href="javascript:history.back()" class="text-white"><i class="fas fa-arrow-right"></i></a>
-    <h5 class="m-0 fw-bold">أرصدة أول المدة للعملاء</h5>
-    <i class="fas fa-users-cog text-primary"></i>
+<div class="header">
+    <i class="fas fa-chevron-right" onclick="history.back()"></i>
+    <h6 class="m-0 fw-bold">أرصدة أول المدة للعملاء</h6>
+    <div style="width:24px"></div>
 </div>
 
-<div class="container">
+<div class="container-fluid p-0">
     <div class="info-alert text-center">
-        <i class="fas fa-info-circle me-1"></i> يتم ضبط الرصيد الافتتاحي للعملاء (المبالغ المستحقة عليهم قبل بدء البرنامج).
+        <i class="fas fa-info-circle me-1"></i> ضبط المبالغ المستحقة على العملاء قبل بدء استخدام البرنامج.
     </div>
 
-    <input type="text" id="searchInput" class="search-box" placeholder="بحث باسم العميل لضبط رصيده...">
+    <input type="text" id="searchInput" class="search-box" placeholder="بحث باسم العميل...">
 
     <div id="customersList">
-        <div class="text-center mt-5"><div class="spinner-border text-primary"></div></div>
+        <div class="text-center mt-5"><div class="spinner-border" style="color: var(--accent)"></div></div>
     </div>
 </div>
 
@@ -105,14 +120,13 @@
 
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                // تعديل: القراءة من initialBalance لتوحيد البيانات
                 const currentStartBal = data.initialBalance || 0;
                 
                 html += `
                     <div class="cust-row" data-name="${data.name.toLowerCase()}">
                         <div>
                             <span class="cust-name">${data.name}</span>
-                            <span class="cust-phone"><i class="fas fa-phone-alt me-1" style="font-size: 10px;"></i> ${data.phone || 'بدون هاتف'}</span>
+                            <span class="cust-phone"><i class="fas fa-phone-alt me-1" style="font-size: 10px; color: var(--accent);"></i> ${data.phone || 'بدون هاتف'}</span>
                         </div>
                         <div class="input-group-custom">
                             <input type="number" 
@@ -127,7 +141,6 @@
 
             listDiv.innerHTML = html;
 
-            // تفعيل البحث اللحظي
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 document.querySelectorAll('.cust-row').forEach(row => {
@@ -136,12 +149,10 @@
             });
 
         } catch (error) {
-            console.error(error);
-            listDiv.innerHTML = '<div class="text-center text-danger">خطأ في تحميل بيانات العملاء</div>';
+            listDiv.innerHTML = '<div class="text-center text-danger mt-5">خطأ في تحميل بيانات العملاء</div>';
         }
     }
 
-    // حفظ الكل باستخدام Batch
     document.getElementById('saveAllBtn').addEventListener('click', async () => {
         const btn = document.getElementById('saveAllBtn');
         const inputs = document.querySelectorAll('.balance-input');
@@ -153,24 +164,18 @@
 
         try {
             const batch = writeBatch(db);
-            
             inputs.forEach(input => {
                 const custId = input.getAttribute('data-id');
                 const newVal = Number(input.value) || 0;
                 const docRef = doc(db, "customers", custId);
-                
-                // تعديل: التحديث في حقل initialBalance لتوحيد السيستم
-                batch.update(docRef, { 
-                    initialBalance: newVal
-                });
+                batch.update(docRef, { initialBalance: newVal });
             });
 
             await batch.commit();
             alert("تم تحديث أرصدة أول المدة بنجاح ✅");
             window.location.reload();
         } catch (error) {
-            console.error(error);
-            alert("حدث خطأ أثناء حفظ أرصدة العملاء");
+            alert("حدث خطأ أثناء الحفظ");
             btn.disabled = false;
             btn.innerHTML = 'حفظ جميع الأرصدة الافتتاحية';
         }

@@ -3,125 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة المخزون - Warchat Pro</title>
+    <title>إدارة المخزون - شركة الزيادي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --bg-dark: #0d1117; 
-            --glass: rgba(255, 255, 255, 0.05); 
-            --neon-blue: #58a6ff;
-            --neon-purple: #bc8cff;
-            --neon-green: #3fb950;
-            --neon-orange: #d29922;
-            --neon-red: #f85149;
-            --text-gray: #c9d1d9;
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --text-muted: #707b7c;
         }
 
         body { 
-            background: var(--bg-dark); 
+            background: var(--bg-light); 
             font-family: 'Cairo', sans-serif; 
-            color: var(--text-gray); 
-            padding: 10px; 
+            color: var(--text-primary); 
+            padding-bottom: 30px;
         }
 
-        .header-nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 10px;
+        .header { 
+            background: var(--header-bg); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
+            position: sticky; top: 0; z-index: 1000;
         }
 
-        .header-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
-        }
+        .header-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+        .back-btn { color: white; font-size: 1.2rem; text-decoration: none; }
 
-        .back-btn {
-            color: var(--text-gray);
-            font-size: 1.2rem;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-        
-        .back-btn:hover { color: var(--neon-blue); }
-
-        .menu-container {
-            padding: 10px;
-        }
+        .menu-container { padding: 15px; }
 
         .menu-card {
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--white);
+            border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 18px 20px;
-            margin-bottom: 15px;
+            padding: 18px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
         .menu-card:hover {
-            background: rgba(255, 255, 255, 0.08);
             transform: translateY(-3px);
-            border-color: rgba(88, 166, 255, 0.4);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 8px 20px rgba(11, 94, 61, 0.1);
         }
 
         .icon-box {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             margin-left: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            transition: 0.3s;
         }
 
-        .text-green { color: var(--neon-green); text-shadow: 0 0 10px rgba(63, 185, 80, 0.3); }
-        .text-blue { color: var(--neon-blue); text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
-        .text-purple { color: var(--neon-purple); text-shadow: 0 0 10px rgba(188, 140, 255, 0.3); }
-        .text-orange { color: var(--neon-orange); text-shadow: 0 0 10px rgba(210, 153, 34, 0.3); }
-        .text-cyan { color: #39c5bb; text-shadow: 0 0 10px rgba(57, 197, 187, 0.3); }
-        .text-red { color: var(--neon-red); text-shadow: 0 0 10px rgba(248, 81, 73, 0.3); }
+        .menu-card:hover .icon-box {
+            background: var(--accent);
+            color: white !important;
+            border-color: var(--accent);
+        }
+
+        /* ألوان الأيقونات الافتراضية قبل الهوفر */
+        .ic-green { color: #28a745; }
+        .ic-blue { color: #007bff; }
+        .ic-purple { color: #6f42c1; }
+        .ic-orange { color: #fd7e14; }
+        .ic-cyan { color: #17a2b8; }
+        .ic-red { color: #dc3545; }
 
         .card-content { flex-grow: 1; }
 
         .card-title {
             font-weight: 700;
-            font-size: 1.05rem;
-            margin-bottom: 3px;
-            color: #f0f6fc;
+            font-size: 1rem;
+            margin-bottom: 2px;
+            color: var(--text-primary);
         }
 
         .card-desc {
             font-size: 0.8rem;
-            color: #8b949e;
+            color: var(--text-muted);
             line-height: 1.3;
         }
 
         .arrow-icon {
-            color: #484f58;
+            color: var(--border);
             font-size: 0.8rem;
             transition: 0.3s;
         }
         
-        .menu-card:hover .arrow-icon { color: var(--neon-blue); transform: translateX(-5px); }
+        .menu-card:hover .arrow-icon { color: var(--accent); transform: translateX(-5px); }
     </style>
 </head>
 <body>
 
-    <div class="header-nav">
+    <div class="header">
         <a href="index1.html" class="back-btn"><i class="fas fa-arrow-right"></i></a>
-        <div class="header-title">إدارة المخزون</div>
+        <h6 class="header-title">إدارة المخزون</h6>
         <div style="width: 24px;"></div> 
     </div>
 
@@ -133,8 +124,8 @@
                 <div class="card-title">إضافة منتج جديد</div>
                 <div class="card-desc">تعريف صنف جديد ببياناته وأسعاره</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-plus-circle text-green"></i>
+            <div class="icon-box ic-green">
+                <i class="fas fa-plus-circle"></i>
             </div>
         </a>
 
@@ -144,8 +135,8 @@
                 <div class="card-title">عرض المنتجات</div>
                 <div class="card-desc">قائمة بكافة الأصناف وحالة المخزن</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-boxes text-blue"></i>
+            <div class="icon-box ic-blue">
+                <i class="fas fa-boxes"></i>
             </div>
         </a>
 
@@ -155,8 +146,8 @@
                 <div class="card-title">إضافة تصنيف جديد</div>
                 <div class="card-desc">تنظيم المنتجات في مجموعات ذكية</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-layer-group text-purple"></i>
+            <div class="icon-box ic-purple">
+                <i class="fas fa-layer-group"></i>
             </div>
         </a>
 
@@ -166,8 +157,8 @@
                 <div class="card-title">تعديل الأسعار</div>
                 <div class="card-desc">تحديث سريع لأسعار البيع والشراء</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-tags text-orange"></i>
+            <div class="icon-box ic-orange">
+                <i class="fas fa-tags"></i>
             </div>
         </a>
 
@@ -177,8 +168,8 @@
                 <div class="card-title">استيراد من ملف Excel</div>
                 <div class="card-desc">رفع كميات كبيرة من البيانات بضغطة واحدة</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-file-excel text-cyan"></i>
+            <div class="icon-box ic-cyan">
+                <i class="fas fa-file-excel"></i>
             </div>
         </a>
 
@@ -188,8 +179,8 @@
                 <div class="card-title">سلة المحذوفات</div>
                 <div class="card-desc">استعادة الأصناف التي تم حذفها مؤقتاً</div>
             </div>
-            <div class="icon-box">
-                <i class="fas fa-trash-alt text-red"></i>
+            <div class="icon-box ic-red">
+                <i class="fas fa-trash-alt"></i>
             </div>
         </a>
 
