@@ -95,7 +95,7 @@
                 </div>
                 <div class="col-6">
                     <label class="sub-lbl">المدفوع</label>
-                    <input type="number" id="paidAmount" class="form-control" value="0" oninput="calc()">
+                    <input type="number" id="paidAmount" class="form-control" value="0" oninput="handleInput()">
                 </div>
             </div>
         </div>
@@ -141,9 +141,23 @@
     let editId = new URLSearchParams(window.location.search).get('edit');
     let isChanged = false;
 
+    // منع الخروج بالخطأ عند الضغط على زر الرجوع في الموبايل أو غلق التاب
+    window.addEventListener('beforeunload', (e) => {
+        if (isChanged) {
+            e.preventDefault();
+            e.returnValue = ''; // رسالة تأكيد المتصفح الافتراضية
+        }
+    });
+
     window.confirmBack = () => {
-        if (isChanged && !confirm("لديك تغييرات غير محفوظة، هل تريد الخروج؟")) return;
+        if (isChanged && !confirm("لديك بيانات غير محفوظة، هل تريد الخروج والرجوع للسجل؟")) return;
         window.location.href = "sales-history.html";
+    };
+
+    // دالة لتسهيل رصد أي تغيير
+    window.handleInput = () => {
+        isChanged = true;
+        calc();
     };
 
     async function init() {
@@ -168,19 +182,16 @@
                     document.getElementById('paidAmount').value = data.paid;
                     Object.keys(data).forEach(k => { if(!isNaN(k)) addNewRow(data[k]); });
                 }
+                isChanged = false; // عشان عند التعديل التحميل ميعتبرش تغيير
             } else { addNewRow(); }
             calc();
         } catch (e) { console.error(e); }
     }
 
-    // بحث العملاء (أول اسم فقط)
     window.searchCustomer = (input) => {
         const term = input.value.toLowerCase().trim();
         const resultsDiv = document.getElementById('customerResults');
-        if (term.length < 1) { 
-            resultsDiv.style.display = 'none'; 
-            return; 
-        }
+        if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
 
         const filtered = customers.filter(c => {
             const firstWord = c.name.toLowerCase().split(" ")[0];
@@ -193,7 +204,6 @@
                 <span style="font-size:0.7rem; color:#666;">رصيد: ${c.currentBalance || 0}</span>
             </div>
         `).join('');
-
         resultsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
     };
 
@@ -204,7 +214,6 @@
         isChanged = true;
     };
 
-    // بحث الأصناف (أول اسم فقط)
     window.searchProduct = (input) => {
         const term = input.value.toLowerCase().trim();
         const resultsDiv = input.parentElement.querySelector('.search-results');
@@ -234,13 +243,14 @@
             row.querySelector('.unit-info-area').innerHTML = `<i class="fas fa-warehouse me-1"></i> رصيد المخزن: ${p.totalPcs} ق`;
             updateRowPrice(row.querySelector('.p-unit'));
         }
+        isChanged = true;
     };
 
     window.addNewRow = (oldData = null) => {
         const id = 'row_' + Math.random().toString(36).substr(2, 5);
         const html = `
             <div class="product-row" id="${id}">
-                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${id}').remove(); calc(); isChanged=true;"></i>
+                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${id}').remove(); handleInput();"></i>
                 <div class="row g-2 mb-2">
                     <div class="col-7 position-relative">
                         <span class="sub-lbl">ابحث عن الصنف</span>
@@ -250,20 +260,21 @@
                     </div>
                     <div class="col-5">
                         <span class="sub-lbl">الوحدة</span>
-                        <select class="form-select p-unit" onchange="updateRowPrice(this); isChanged=true;">
+                        <select class="form-select p-unit" onchange="updateRowPrice(this); handleInput();">
                             <option value="box" ${oldData?.unit === 'box' ? 'selected' : ''}>كرتونة</option>
                             <option value="pcs" ${oldData?.unit === 'pcs' ? 'selected' : ''}>قطعة</option>
                         </select>
                     </div>
                 </div>
                 <div class="row g-2">
-                    <div class="col-4"><span class="sub-lbl">الكمية</span><input type="number" class="form-control p-qty" value="${oldData ? oldData.qty : 1}" oninput="calc(); isChanged=true;"></div>
-                    <div class="col-4"><span class="sub-lbl">السعر</span><input type="number" class="form-control p-price" value="${oldData ? oldData.price : ''}" oninput="calc(); isChanged=true;"></div>
+                    <div class="col-4"><span class="sub-lbl">الكمية</span><input type="number" class="form-control p-qty" value="${oldData ? oldData.qty : 1}" oninput="handleInput()"></div>
+                    <div class="col-4"><span class="sub-lbl">السعر</span><input type="number" class="form-control p-price" value="${oldData ? oldData.price : ''}" oninput="handleInput()"></div>
                     <div class="col-4"><span class="sub-lbl">الإجمالي</span><input type="text" class="form-control p-subtotal" readonly value="0.00" style="background:#e9ecef!important;"></div>
                 </div>
                 <div class="unit-info-area"></div>
             </div>`;
         document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', html);
+        if(!oldData) isChanged = true;
         return id;
     };
 
@@ -297,7 +308,7 @@
         const method = document.getElementById('payMethod').value;
         const total = parseFloat(document.getElementById('displayTotal').innerText.replace(/,/g, '')) || 0;
         document.getElementById('paidAmount').value = (method === 'cash') ? total : 0;
-        calc();
+        handleInput();
     };
 
     window.saveInvoice = async () => {
@@ -347,7 +358,7 @@
                 }
                 await addDoc(collection(db, "invoices"), invoiceData);
             }
-            isChanged = false;
+            isChanged = false; // تصفير الحالة عشان الخروج يبقى مسموح بعد الحفظ
             alert("تم حفظ الفاتورة بنجاح");
             window.location.href = "sales-history.html";
         } catch(e) { alert("خطأ: " + e.message); saveBtn.disabled = false; }
