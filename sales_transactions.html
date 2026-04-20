@@ -3,58 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سجل مبيعات</title>
+    <title>سجل الفواتير - شركة الزيادى</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --card-bg: #161b22; --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-red: #f85149; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
-        .header-nav { background: #010409; padding: 15px 20px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .stats-container { display: flex; gap: 10px; padding: 15px; overflow-x: auto; scrollbar-width: none; }
-        .stat-card { background: var(--card-bg); border: 1px solid #30363d; border-radius: 15px; padding: 15px; min-width: 120px; flex: 1; text-align: center; }
-        .stat-title { font-size: 0.75rem; color: #8b949e; margin-bottom: 5px; }
-        .stat-value { font-weight: 800; font-size: 1rem; font-family: 'Consolas', monospace; }
-        .search-container { padding: 0 15px 15px 15px; position: relative; }
-        .search-input { width: 100%; background: var(--card-bg); border: 1px solid #30363d; padding: 12px 45px 12px 20px; border-radius: 12px; color: #fff; outline: none; }
-        .search-icon { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); color: var(--neon-blue); }
-        .inv-card { background: var(--card-bg); border: 1px solid #30363d; border-radius: 20px; padding: 18px; margin: 0 15px 15px 15px; transition: 0.3s; }
-        .rem-badge { font-size: 0.7rem; background: rgba(248, 81, 73, 0.1); color: var(--neon-red); padding: 3px 10px; border-radius: 8px; font-weight: bold; }
-        .cash-badge { font-size: 0.7rem; background: rgba(63, 185, 80, 0.1); color: var(--neon-green); padding: 3px 10px; border-radius: 8px; font-weight: bold; }
-        .action-icons { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #30363d; }
-        .action-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: #161b22; border: 1px solid var(--neon-blue); border-radius: 20px; color: #fff; }
+        /* الهوية البصرية المعتمدة لشركة الزيادي */
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --danger: #d90429;
+            --success: #2d6a4f;
+            --warning: #f2a600;
+        }
+
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); }
+
+        /* Header */
+        .header-nav { 
+            padding: 15px 20px; 
+            background: var(--header-bg); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            color: white; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+
+        /* Invoice Card */
+        .inv-card { 
+            background: var(--white); 
+            border: 1px solid var(--border); 
+            border-radius: 18px; 
+            padding: 18px; 
+            margin-bottom: 15px; 
+            border-right: 5px solid var(--accent); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        /* Action Buttons */
+        .action-icons { 
+            display: flex; 
+            justify-content: space-around; 
+            margin-top: 15px; 
+            border-top: 1px solid #f0f3f1; 
+            padding-top: 12px; 
+        }
+        .action-btn { background: none; border: none; font-size: 1.25rem; cursor: pointer; transition: 0.2s; }
+        .action-btn:active { transform: scale(0.9); }
+
+        /* Modal Styles */
+        .modal-content { 
+            background: var(--white); 
+            border-radius: 25px; 
+            border: none; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Status & Values */
+        .rem-box { 
+            font-size: 0.75rem; 
+            color: var(--danger); 
+            background: #fff0f0; 
+            padding: 3px 10px; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            display: inline-block;
+        }
+        .total-val { color: var(--accent); font-weight: 800; font-size: 1.15rem; }
+        
+        .btn-primary.rounded-pill {
+            background-color: var(--white);
+            color: var(--accent);
+            border: none;
+            font-weight: 700;
+        }
+
         #printFrame { display: none; }
     </style>
 </head>
 <body>
 
-<div class="header-nav">
-    <i class="fas fa-sync-alt" onclick="loadInvoices()" style="cursor:pointer; color: #8b949e;"></i>
-    <h6 class="m-0 fw-bold">سجل المبيعات <span style="color: var(--neon-blue)"></span></h6>
-    <a href="sales-invoice.html" style="color: var(--neon-blue); font-size: 1.4rem;"><i class="fas fa-plus-circle"></i></a>
+<div class="header-nav d-flex justify-content-between align-items-center">
+    <h5 class="m-0 fw-bold">سجل الفواتير</h5>
+    <a href="sales-invoice.html" class="btn btn-primary btn-sm rounded-pill"><i class="fas fa-plus me-1"></i> فاتورة جديدة</a>
 </div>
 
-<div class="stats-container">
-    <div class="stat-card"><div class="stat-title">إجمالي المبيعات</div><div class="stat-value text-info" id="totalAll">0</div></div>
-    <div class="stat-card"><div class="stat-title">المحصل فعلياً</div><div class="stat-value text-success" id="paidAll">0</div></div>
-    <div class="stat-card"><div class="stat-title">إجمالي الآجل</div><div class="stat-value text-danger" id="remAll">0</div></div>
-</div>
-
-<div class="search-container">
-    <i class="fas fa-search search-icon"></i>
-    <input type="text" id="searchInput" class="search-input" placeholder="بحث باسم العميل...">
-</div>
-
-<div id="listContainer">
-    <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+<div class="container mt-3" id="list">
+    <div class="text-center p-5"><div class="spinner-border text-success"></div></div>
 </div>
 
 <div class="modal fade" id="viewModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body" id="modalBody"></div>
-            <div class="p-3"><button class="btn btn-dark w-100 rounded-pill" data-bs-dismiss="modal">إغلاق</button></div>
+            <div class="p-3 pt-0">
+                <button class="btn btn-success w-100 rounded-pill fw-bold" style="background-color: var(--accent);" data-bs-dismiss="modal">إغلاق</button>
+            </div>
         </div>
     </div>
 </div>
@@ -63,7 +112,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, doc, deleteDoc, updateDoc, increment, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
@@ -80,67 +129,63 @@
 
     window.loadInvoices = async () => {
         try {
-            // جلب الفواتير والسندات (Transactions)
-            const [invSnap, transSnap] = await Promise.all([
-                getDocs(query(collection(db, "invoices"), orderBy("timestamp", "desc"))),
-                getDocs(query(collection(db, "transactions"), where("type", "==", "قبض")))
-            ]);
-
-            allInvoices = invSnap.docs.map(d => ({id: d.id, ...d.data()}));
-            
-            let totalSales = 0;
-            let totalRemainingInInvoices = 0;
-            let totalPaidAtInvoiceTime = 0;
-
-            allInvoices.forEach(inv => {
-                const total = Number(inv.total || 0);
-                const rem = Number(inv.remaining || 0);
-                totalSales += total;
-                totalRemainingInInvoices += rem;
-                totalPaidAtInvoiceTime += (total - rem); // ما تم دفعه لحظة الفاتورة
-            });
-
-            // حساب إجمالي السندات المحصلة من جدول الترانزاكشن
-            let totalFromReceipts = 0;
-            transSnap.forEach(t => {
-                totalFromReceipts += Number(t.data().amount || 0);
-            });
-
-            // المحصل فعلياً = المقبوض من الفواتير + المقبوض من السندات
-            // (بشرط أن سند القبض يُنقص مديونية العميل في قاعدة البيانات)
-            const actualPaid = totalPaidAtInvoiceTime + totalFromReceipts;
-
-            document.getElementById('totalAll').innerText = totalSales.toLocaleString();
-            document.getElementById('remAll').innerText = (totalSales - actualPaid).toLocaleString();
-            document.getElementById('paidAll').innerText = actualPaid.toLocaleString();
-            
+            const snap = await getDocs(query(collection(db, "invoices"), orderBy("timestamp", "desc")));
+            allInvoices = snap.docs.map(d => ({id: d.id, ...d.data()}));
             render();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error("خطأ في التحميل:", e);
+        }
     };
 
     function render() {
-        const container = document.getElementById('listContainer');
-        container.innerHTML = allInvoices.map(inv => `
-            <div class="inv-card" data-name="${inv.customerName || ''}">
+        if (allInvoices.length === 0) {
+            document.getElementById('list').innerHTML = '<div class="text-center p-5 opacity-50">لا توجد فواتير مسجلة</div>';
+            return;
+        }
+        document.getElementById('list').innerHTML = allInvoices.map(inv => `
+            <div class="inv-card">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <b class="d-block text-white mb-1">${inv.customerName || 'عميل نقدي'}</b>
-                        <small class="text-muted"><i class="far fa-calendar-alt"></i> ${inv.time}</small>
+                        <b class="d-block mb-1" style="font-size: 1.05rem;">${inv.customerName || 'عميل نقدي'}</b>
+                        <small class="text-muted" style="font-size: 0.75rem;"><i class="far fa-clock me-1"></i> ${inv.time}</small>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold text-info">${Number(inv.total).toLocaleString()}</div>
-                        ${inv.remaining > 0 ? `<div class="rem-badge mt-2">آجل: ${inv.remaining}</div>` : `<div class="cash-badge mt-2">خالص</div>`}
+                        <div class="total-val">${Number(inv.total).toLocaleString()} ج.م</div>
+                        ${inv.remaining > 0 ? `<div class="rem-box mt-1">متبقي: ${Number(inv.remaining).toLocaleString()}</div>` : `<div class="badge bg-success mt-1" style="font-size:0.6rem">خالص ✅</div>`}
                     </div>
                 </div>
                 <div class="action-icons">
-                    <button class="action-btn" onclick="showInv('${inv.id}')"><i class="fas fa-eye text-info"></i></button>
-                    <button class="action-btn" onclick="editInv('${inv.id}')"><i class="fas fa-edit text-success"></i></button>
-                    <button class="action-btn" onclick="printInv('${inv.id}')"><i class="fas fa-print text-warning"></i></button>
-                    <button class="action-btn" onclick="deleteInv('${inv.id}')"><i class="fas fa-trash-alt text-danger"></i></button>
+                    <button class="action-btn" style="color: #0d6efd;" onclick="showInv('${inv.id}')" title="عرض"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn" style="color: var(--success);" onclick="editInv('${inv.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn" style="color: #6c757d;" onclick="printInv('${inv.id}')" title="طباعة"><i class="fas fa-print"></i></button>
+                    <button class="action-btn" style="color: var(--danger);" onclick="deleteInv('${inv.id}')" title="حذف"><i class="fas fa-trash-alt"></i></button>
                 </div>
             </div>
         `).join('');
     }
+
+    window.showInv = (id) => {
+        const inv = allInvoices.find(i => i.id === id);
+        let itemsHtml = "";
+        Object.keys(inv).forEach(k => {
+            if(!isNaN(k)) {
+                itemsHtml += `<div class="d-flex justify-content-between border-bottom py-2 small">
+                    <span class="fw-600">${inv[k].name} (x${inv[k].qty})</span>
+                    <b class="text-dark">${(inv[k].qty * inv[k].price).toLocaleString()} ج.م</b>
+                </div>`;
+            }
+        });
+        document.getElementById('modalBody').innerHTML = `
+            <h6 class="fw-bold mb-3" style="color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 8px;">تفاصيل الفاتورة - ${inv.customerName}</h6>
+            ${itemsHtml}
+            <div class="mt-3 p-3 rounded-4 bg-light">
+                <div class="d-flex justify-content-between"><span>الإجمالي:</span><b>${Number(inv.total).toLocaleString()} ج.م</b></div>
+                <div class="d-flex justify-content-between text-danger"><span>المتبقي:</span><b>${Number(inv.remaining || 0).toLocaleString()} ج.م</b></div>
+            </div>`;
+        new bootstrap.Modal(document.getElementById('viewModal')).show();
+    };
+
+    window.editInv = (id) => window.location.href = `sales-invoice.html?edit=${id}`;
 
     window.printInv = (id) => {
         const inv = allInvoices.find(i => i.id === id);
@@ -148,82 +193,72 @@
         Object.keys(inv).forEach(k => {
             if(!isNaN(k)) {
                 rows += `<tr>
-                    <td style="text-align:right; padding:5px; border-bottom:1px dashed #ccc;">${inv[k].name}</td>
+                    <td style="padding:5px; border-bottom:1px dashed #ccc;">${inv[k].name}</td>
                     <td style="text-align:center;">${inv[k].qty}</td>
-                    <td style="text-align:center;">${Number(inv[k].price || 0).toLocaleString()}</td>
-                    <td style="text-align:left;">${(inv[k].qty * (inv[k].price || 0)).toLocaleString()}</td>
+                    <td style="text-align:left;">${(inv[k].qty * inv[k].price).toLocaleString()}</td>
                 </tr>`;
             }
         });
 
-        const content = `
-            <html dir="rtl"><head><style>
-                body { font-family: 'Arial'; padding: 10px; width: 72mm; font-size: 11px; }
-                .h { text-align: center; border-bottom: 2px solid #000; margin-bottom: 10px; }
-                table { width: 100%; border-collapse: collapse; }
-                th { border-bottom: 1px solid #000; padding: 5px 2px; font-size: 10px; }
-                .total-sec { border-top: 1px solid #000; margin-top: 10px; padding-top: 5px; font-weight: bold; }
-            </style></head>
+        // حساب المسدد
+        const total = Number(inv.total || 0);
+        const remaining = Number(inv.remaining || 0);
+        const paid = total - remaining;
+
+        const printFrame = document.getElementById('printFrame');
+        const pri = printFrame.contentWindow || printFrame.contentDocument;
+        
+        const printContent = `
+            <html dir="rtl">
+            <head>
+                <style>
+                    body { font-family: 'Arial'; padding: 5px; margin: 0; width: 72mm; font-size: 13px; }
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th { border-bottom: 1px solid #000; padding: 5px; font-size: 12px; }
+                    .total-sec { border-top: 2px solid #000; margin-top: 10px; padding-top: 8px; }
+                    .row-flex { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                    .bold { font-weight: bold; font-size: 15px; }
+                    .footer { text-align: center; font-size: 11px; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 10px; }
+                </style>
+            </head>
             <body>
-                <div class="h"><h3>شركة الزيادي</h3><p>قطع غيار وزيوت</p><small>${inv.time}</small></div>
-                <p><b>العميل:</b> ${inv.customerName}</p>
+                <div class="header">
+                    <h2 style="margin:0;">شركة الزيادى</h2>
+                    <p style="margin:2px 0;">لقطع الغيار والكماليات</p>
+                    <small>${inv.time}</small>
+                </div>
+                <p><b>العميل:</b> ${inv.customerName || 'عميل نقدي'}</p>
                 <table>
-                    <thead><tr><th>البيان</th><th>كمية</th><th>سعر</th><th>إجمالي</th></tr></thead>
+                    <thead><tr><th style="text-align:right;">الصنف</th><th>ك</th><th style="text-align:left;">ج.م</th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
                 <div class="total-sec">
-                    <div style="display:flex; justify-content:space-between"><span>الإجمالي:</span><span>${Number(inv.total).toLocaleString()} ج.م</span></div>
-                    ${inv.remaining > 0 ? `<div style="display:flex; justify-content:space-between; color:red"><span>المتبقي:</span><span>${inv.remaining.toLocaleString()} ج.م</span></div>` : ''}
+                    <div class="row-flex bold"><span>الإجمالي:</span><span>${total.toLocaleString()} ج.م</span></div>
+                    <div class="row-flex"><span>المسدد:</span><span>${paid.toLocaleString()} ج.م</span></div>
+                    ${remaining > 0 ? `<div class="row-flex" style="color:red; font-weight:bold;"><span>المتبقي:</span><span>${remaining.toLocaleString()} ج.م</span></div>` : '<div style="text-align:center; font-weight:bold; color:green; margin-top:5px;">*** الفاتورة خالصة ***</div>'}
                 </div>
-                <div style="text-align:center; margin-top:15px; font-size:10px;">شركة الزيادى لقطع الغيار</div>
-            </body></html>`;
-        
-        const printFrame = document.getElementById('printFrame');
-        const pri = printFrame.contentWindow || printFrame.contentDocument;
-        pri.document.open(); pri.document.write(content); pri.document.close();
+                <div class="footer">شكراً لزيارتكم - نسعد دائماً بخدمتكم</div>
+            </body>
+            </html>`;
+
+        pri.document.open();
+        pri.document.write(printContent);
+        pri.document.close();
+
         setTimeout(() => { pri.focus(); pri.print(); }, 500);
     };
 
-    window.showInv = (id) => {
-        const inv = allInvoices.find(i => i.id === id);
-        let itemsHtml = "";
-        Object.keys(inv).forEach(k => {
-            if(!isNaN(k)) {
-                itemsHtml += `<div class="d-flex justify-content-between border-bottom border-secondary py-2 small">
-                    <span>${inv[k].name} (x${inv[k].qty})</span>
-                    <b>${(inv[k].qty * (inv[k].price || 0)).toLocaleString()}</b>
-                </div>`;
-            }
-        });
-        document.getElementById('modalBody').innerHTML = `
-            <h6 class="text-info fw-bold mb-3 border-bottom pb-2">تفاصيل الفاتورة</h6>
-            ${itemsHtml || '<p class="text-center">لا توجد أصناف</p>'}
-            <div class="mt-3 p-3 rounded-4 bg-blue bg-opacity-50">
-                <div class="d-flex justify-content-between small"><span>الإجمالي:</span><b>${inv.total}</b></div>
-                <div class="d-flex justify-content-between small text-danger"><span>المتبقي:</span><b>${inv.remaining || 0}</b></div>
-            </div>`;
-        new bootstrap.Modal(document.getElementById('viewModal')).show();
-    };
-
-    window.editInv = (id) => window.location.href = `sales-invoice.html?edit=${id}`;
-
     window.deleteInv = async (id) => {
-        if(!confirm("حذف الفاتورة سيؤدي لتعديل مديونية العميل. موافق؟")) return;
-        const inv = allInvoices.find(i => i.id === id);
+        if(!confirm("هل أنت متأكد من حذف الفاتورة؟ سيتم تعديل مديونية العميل تلقائياً.")) return;
         try {
+            const inv = allInvoices.find(i => i.id === id);
             await deleteDoc(doc(db, "invoices", id));
-            if (inv.customerId && inv.remaining > 0) {
+            if (inv.customerId && inv.customerId !== "walk-in") {
                 await updateDoc(doc(db, "customers", inv.customerId), { currentBalance: increment(-inv.remaining) });
             }
-            loadInvoices();
-        } catch(e) { alert("خطأ: " + e.message); }
-    };
-
-    document.getElementById('searchInput').oninput = (e) => {
-        const val = e.target.value.toLowerCase();
-        document.querySelectorAll('.inv-card').forEach(card => {
-            card.style.display = card.dataset.name.toLowerCase().includes(val) ? 'block' : 'none';
-        });
+            loadInvoices(); 
+        } catch(e) { alert("حدث خطأ: " + e.message); }
     };
 
     loadInvoices();

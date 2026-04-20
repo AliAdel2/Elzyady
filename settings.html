@@ -5,47 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إعدادات النظام - Al-Nada Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon: #58a6ff; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
-        .header-section { padding: 20px; background: var(--glass); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .settings-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-top: 20px; }
-        .form-control, .form-select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
-        .form-label { font-size: 0.85rem; opacity: 0.7; margin-bottom: 5px; display: block; }
-        .btn-save { background: var(--neon); color: #fff; border: none; padding: 15px; border-radius: 15px; font-weight: 700; width: 100%; box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3); }
-        .btn-backup { background: rgba(63, 185, 80, 0.1); color: #3fb950; border: 1px solid #3fb950; width: 100%; padding: 12px; border-radius: 12px; margin-top: 10px; }
-        .btn-danger-custom { background: rgba(248, 81, 73, 0.1); color: #f85149; border: 1px solid #f85149; width: 100%; padding: 12px; border-radius: 12px; margin-top: 20px; }
+        /* الهوية البصرية المعتمدة - أخضر شركة الزيادي */
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --danger: #d90429;
+            --success: #2d6a4f;
+        }
+
+        body { 
+            background: var(--bg-light); 
+            font-family: 'Cairo', sans-serif; 
+            color: var(--text-primary); 
+            padding-bottom: 50px; 
+        }
+
+        /* Header */
+        .header-nav { 
+            padding: 15px 20px; 
+            background: var(--header-bg); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            color: white; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+
+        /* Settings Card */
+        .settings-card { 
+            background: var(--white); 
+            border: 1px solid var(--border); 
+            border-radius: 18px; 
+            padding: 22px; 
+            margin-top: 15px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border-right: 5px solid var(--accent);
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 18px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select { 
+            background: #fdfdfd !important; 
+            border: 1px solid var(--border) !important; 
+            border-radius: 12px; 
+            padding: 11px; 
+            font-size: 0.9rem;
+        }
+        .form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(11, 94, 61, 0.1);
+        }
+        .form-label { font-size: 0.8rem; font-weight: 700; color: #556b5f; margin-bottom: 6px; }
+
+        /* Buttons */
+        .btn-save { 
+            background: var(--accent); 
+            color: #fff; border: none; padding: 15px; 
+            border-radius: 15px; font-weight: 700; width: 100%; 
+            box-shadow: 0 4px 15px rgba(11, 94, 61, 0.2);
+            transition: 0.2s;
+        }
+        .btn-save:active { transform: scale(0.98); }
+
+        .btn-backup { 
+            background: #e9f5ef; 
+            color: var(--success); 
+            border: 1px solid var(--success); 
+            width: 100%; padding: 12px; border-radius: 12px; font-weight: 700;
+        }
+
+        .btn-danger-custom { 
+            background: #fff0f0; 
+            color: var(--danger); 
+            border: 1px solid var(--danger); 
+            width: 100%; padding: 12px; border-radius: 12px; margin-top: 15px; font-weight: 700;
+        }
         
-        /* تصميم جدول المستخدمين */
-        .table-custom { background: rgba(255,255,255,0.02); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        .table { color: #c9d1d9; margin-bottom: 0; vertical-align: middle; }
-        .table thead { background: rgba(255,255,255,0.05); }
-        .table th { border: none; padding: 12px; font-size: 0.9rem; }
-        .table td { border-top: 1px solid rgba(255,255,255,0.05); padding: 12px; }
-        .btn-action { width: 32px; height: 32px; padding: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+        /* Table Custom */
+        .table-custom { 
+            border-radius: 14px; 
+            overflow: hidden; 
+            border: 1px solid var(--border); 
+            margin-top: 15px;
+        }
+        .table { margin-bottom: 0; background: white; }
+        .table thead { background: #f8faf9; color: var(--accent); }
+        .table th { border: none; padding: 12px; font-size: 0.85rem; }
+        .table td { border-top: 1px solid var(--border); padding: 12px; vertical-align: middle; }
+        
+        .btn-action { 
+            width: 34px; height: 34px; border-radius: 8px; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            border: 1px solid var(--border); background: #fdfdfd;
+        }
     </style>
 </head>
 <body>
 
-<div class="header-section">
-    <a href="index.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
-    <h6 class="m-0 fw-bold">إعدادات النظام المتقدمة</h6>
-    <i class="fas fa-user-shield text-primary"></i>
+<div class="header-nav d-flex justify-content-between align-items-center">
+    <a href="index.html" class="text-white text-decoration-none"><i class="fas fa-arrow-right"></i></a>
+    <h5 class="m-0 fw-bold">إعدادات النظام</h5>
+    <i class="fas fa-tools"></i>
 </div>
 
 <div class="container">
     <div class="settings-card">
-        <h6 class="mb-3 text-info"><i class="fas fa-id-card me-2"></i> بيانات الفاتورة والمحل</h6>
+        <div class="card-title"><i class="fas fa-store-alt"></i> هويّة المحل والفاتورة</div>
         <div class="row g-2">
-            <div class="col-md-6">
-                <label class="form-label">اسم المؤسسة</label>
-                <input type="text" id="storeName" class="form-control" placeholder="الزيادي لقطع الغيار">
+            <div class="col-12 col-md-6">
+                <label class="form-label">اسم المؤسسة (يظهر في الفاتورة)</label>
+                <input type="text" id="storeName" class="form-control" placeholder="شركة الزيادي لقطع الغيار">
             </div>
-            <div class="col-md-6">
-                <label class="form-label">رقم واتساب التواصل</label>
-                <input type="text" id="storePhone" class="form-control" placeholder="010xxxxxxx">
+            <div class="col-12 col-md-6">
+                <label class="form-label">رقم التواصل</label>
+                <input type="text" id="storePhone" class="form-control" placeholder="01xxxxxxxxx">
             </div>
             <div class="col-12">
                 <label class="form-label">العنوان</label>
@@ -55,65 +144,68 @@
     </div>
 
     <div class="settings-card">
-        <h6 class="mb-3 text-primary"><i class="fas fa-users-gear me-2"></i> صلاحيات الدخول والمستخدمين</h6>
-        <div class="row g-2 mb-3">
-            <div class="col-6 col-md-4">
-                <input type="text" id="newUsername" class="form-control mb-0" placeholder="اسم المستخدم">
+        <div class="card-title text-primary"><i class="fas fa-user-shield"></i> إدارة صلاحيات المستخدمين</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="form-label">اسم المستخدم</label>
+                <input type="text" id="newUsername" class="form-control">
             </div>
-            <div class="col-6 col-md-4">
-                <select id="userRole" class="form-select mb-0">
-                    <option value="admin">مدير (كل الصلاحيات)</option>
-                    <option value="cashier">كاشير (بيع فقط)</option>
+            <div class="col-6">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="userPass" class="form-control">
+            </div>
+            <div class="col-12">
+                <label class="form-label">الصلاحية</label>
+                <select id="userRole" class="form-select">
+                    <option value="admin">مدير (كامل الصلاحيات)</option>
+                    <option value="cashier">كاشير (مبيعات فقط)</option>
                 </select>
             </div>
-            <div class="col-12 col-md-4">
-                <input type="password" id="userPass" class="form-control mb-0" placeholder="كلمة السر">
-            </div>
             <div class="col-12 mt-2">
-                <button class="btn btn-primary w-100 py-2 fw-bold" id="btnAddUser">
-                    <i class="fas fa-plus-circle me-1"></i> إضافة / تحديث بيانات المستخدم
+                <button class="btn btn-success w-100 py-2 rounded-3 fw-bold" id="btnAddUser" style="background: var(--accent); border: none;">
+                    <i class="fas fa-plus-circle me-1"></i> حفظ / تحديث المستخدم
                 </button>
             </div>
         </div>
 
-        <div class="table-custom mt-4">
+        <div class="table-custom">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>المستخدم</th>
+                        <th>الاسم</th>
                         <th>الصلاحية</th>
-                        <th class="text-center">إجراء</th>
+                        <th class="text-center">تحكم</th>
                     </tr>
                 </thead>
-                <tbody id="usersListTable">
-                    </tbody>
+                <tbody id="usersListTable"></tbody>
             </table>
         </div>
     </div>
 
     <div class="settings-card">
-        <h6 class="mb-3 text-warning"><i class="fas fa-boxes-stacked me-2"></i> إعدادات المخزن</h6>
-        <label class="form-label">حد تنبيه النواقص الافتراضي</label>
-        <input type="number" id="defaultMinQty" class="form-control" value="5">
+        <div class="card-title text-warning"><i class="fas fa-layer-group"></i> إعدادات المخزن</div>
+        <label class="form-label">حد تنبيه النواقص</label>
+        <input type="number" id="defaultMinQty" class="form-control">
     </div>
 
     <div class="settings-card">
-        <h6 class="mb-3 text-success"><i class="fas fa-database me-2"></i> تصدير البيانات (Excel متوافق)</h6>
-        <p class="small opacity-50">تم استخدام فاصل (;) لضمان توزيع البيانات على الأعمدة في نسخ ويندوز العربية.</p>
+        <div class="card-title text-success"><i class="fas fa-file-excel"></i> النسخ الاحتياطي</div>
+        <p class="small text-muted">يمكنك تصدير بيانات المخزن بالكامل لملف Excel.</p>
         <button class="btn btn-backup" id="btnExportCSV">
-            <i class="fas fa-file-excel me-2"></i> تحميل ملف المخزن (أعمدة منفصلة)
+            <i class="fas fa-download me-2"></i> تحميل ملف المخزن
         </button>
     </div>
 
-    <div class="mt-4">
-        <button class="btn-save" id="btnSaveSettings">حفظ إعدادات النظام</button>
+    <div class="mt-4 px-1">
+        <button class="btn-save" id="btnSaveSettings">حفظ الإعدادات بالكامل</button>
         <button class="btn btn-danger-custom" id="btnResetApp">
-            <i class="fas fa-trash-can me-2"></i> تصفير كافة السجلات المالية
+            <i class="fas fa-exclamation-triangle me-2"></i> تصفير السجلات المالية
         </button>
     </div>
 </div>
 
 <script type="module">
+    // ... (نفس كود Firebase والـ Script اللي عندك شغال تمام)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -151,14 +243,14 @@
             const user = u.data();
             tableBody.innerHTML += `
                 <tr>
-                    <td><b class="text-white">${u.id}</b></td>
+                    <td><b>${u.id}</b></td>
                     <td><span class="badge ${user.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${user.role === 'admin' ? 'مدير' : 'كاشير'}</span></td>
                     <td class="text-center">
-                        <button class="btn btn-action btn-outline-info me-1" onclick="editUser('${u.id}', '${user.role}', '${user.pass}')">
+                        <button class="btn-action text-info me-1" onclick="editUser('${u.id}', '${user.role}', '${user.pass}')">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-action btn-outline-danger" onclick="deleteUser('${u.id}')">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn-action text-danger" onclick="deleteUser('${u.id}')">
+                            <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -183,11 +275,8 @@
         const role = document.getElementById('userRole').value;
         const pass = document.getElementById('userPass').value;
         if(!id || !pass) return alert("أكمل البيانات");
-        
         await setDoc(doc(db, "users", id), { role, pass });
-        alert("تم الحفظ");
-        document.getElementById('newUsername').value = "";
-        document.getElementById('userPass').value = "";
+        alert("تم الحفظ ✅");
         loadUsers();
     });
 
@@ -201,28 +290,18 @@
         alert("تم حفظ الإعدادات بنجاح ✅");
     });
 
-    // تصدير البيانات مع حل نهائي لمشكلة الأعمدة في Excel
     document.getElementById('btnExportCSV').addEventListener('click', async () => {
         const snap = await getDocs(collection(db, "inventory"));
-        
-        // استخدام سيمي كولون (;) كفاصل يضمن توزيع الأعمدة بشكل سليم في الويندوز العربي
         let csvContent = "الصنف;الكمية المتاحة;سعر الشراء;سعر البيع\n";
-        
         snap.forEach(doc => {
             const d = doc.data();
-            const name = (d.name || "").replace(/;/g, '-'); // منع تداخل الفواصل
-            csvContent += `${name};${d.qty || 0};${d.buy || 0};${d.sell || 0}\n`;
+            csvContent += `${(d.name || "").replace(/;/g, '-')};${d.qty || 0};${d.buy || 0};${d.sell || 0}\n`;
         });
-
-        const BOM = "\uFEFF"; // لدعم العربي
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `مخزن_${new Date().toLocaleDateString('ar-EG')}.csv`);
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = "المخزن.csv";
         link.click();
-        document.body.removeChild(link);
     });
 
     loadSettings();

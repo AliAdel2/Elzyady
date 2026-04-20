@@ -9,98 +9,97 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --bg: #0d1117; 
-            --card-bg: #161b22;
-            --glass: rgba(255,255,255,0.03); 
-            --neon-blue: #58a6ff; 
-            --neon-green: #3fb950; 
-            --neon-yellow: #d29922; 
-            --neon-red: #f85149; 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --danger: #d90429;
+            --info: #0077b6;
+            --success: #2d6a4f;
         }
 
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
 
-        /* Header Styling */
-        .header-section { 
-            padding: 15px 20px; background: rgba(13, 17, 23, 0.9); 
-            border-bottom: 1px solid rgba(48, 54, 61, 0.8); 
-            position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(12px); 
-            display: flex; justify-content: space-between; align-items: center;
+        .header { 
+            background: var(--header-bg); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
+            position: sticky; top: 0; z-index: 1000;
         }
 
         /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px; }
         .stat-card { 
-            background: var(--card-bg); border: 1px solid #30363d; 
-            border-radius: 16px; padding: 12px 10px; text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 18px; padding: 12px 5px; text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
-        .stat-val { font-size: 1rem; font-weight: 800; display: block; color: #fff; font-family: 'Consolas', monospace; margin-top: 5px; }
-        .stat-label { font-size: 0.6rem; color: #8b949e; display: block; }
+        .stat-val { font-size: 0.95rem; font-weight: 800; display: block; font-family: 'Consolas', monospace; margin-top: 3px; }
+        .stat-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; display: block; }
 
         /* Search Box */
-        .search-box { position: relative; margin-bottom: 20px; padding: 0 5px; }
+        .search-box { position: relative; margin: 0 15px 20px 15px; }
         .search-box input { 
-            background: #0d1117 !important; border: 1px solid #30363d !important; 
-            color: #fff !important; border-radius: 12px; padding: 12px 45px 12px 15px; width: 100%; 
-            outline: none; transition: 0.3s;
+            background: var(--white) !important; border: 1px solid var(--border) !important; 
+            color: var(--text-primary) !important; border-radius: 15px; padding: 12px 45px 12px 15px; width: 100%; 
+            font-weight: 600;
         }
-        .search-box input:focus { border-color: var(--neon-blue) !important; box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1); }
-        .search-box i { position: absolute; right: 30px; top: 15px; color: #8b949e; }
+        .search-box i { position: absolute; right: 15px; top: 15px; color: var(--accent); }
 
         /* Invoice Card Styling */
         .invoice-card { 
-            background: var(--card-bg); border: 1px solid #30363d; 
-            border-radius: 18px; padding: 16px; margin: 0 5px 12px 5px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: pointer; position: relative;
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 16px; margin: 0 15px 12px 15px; 
+            transition: 0.3s; cursor: pointer; position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         }
-        .invoice-card:hover { border-color: #8b949e; transform: translateY(-2px); background: #1c2128; }
         .invoice-card:active { transform: scale(0.98); }
 
-        /* Return Styling */
-        .invoice-card.return-style { border-right: 4px solid var(--neon-red); }
-        .invoice-card.purchase-style { border-right: 4px solid var(--neon-blue); }
+        /* Status Colors */
+        .purchase-style { border-right: 5px solid var(--accent); }
+        .return-style { border-right: 5px solid var(--danger); }
 
         .inv-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .sup-name { font-weight: 700; font-size: 1rem; color: #f0f6fc; margin: 0; }
-        .inv-date { font-size: 0.7rem; color: #8b949e; margin-top: 2px; display: block; }
+        .sup-name { font-weight: 800; font-size: 1rem; color: var(--text-primary); margin: 0; }
+        .inv-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
         
-        .inv-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 8px; font-weight: bold; }
-        .type-cash { background: rgba(63, 185, 80, 0.1); color: var(--neon-green); }
-        .type-credit { background: rgba(210, 153, 34, 0.1); color: var(--neon-yellow); }
-        .type-return { background: rgba(248, 81, 73, 0.1); color: var(--neon-red); }
+        .inv-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; }
+        .type-cash { background: #e7f5ee; color: var(--success); }
+        .type-credit { background: #fff4e6; color: #d68102; }
+        .type-return { background: #fff0f3; color: var(--danger); }
 
         .price-tag { text-align: left; }
-        .price-val { font-weight: 800; color: #fff; font-size: 1.2rem; font-family: 'Consolas', monospace; display: block; }
-        .price-label { font-size: 0.55rem; color: #8b949e; text-transform: uppercase; }
+        .price-val { font-weight: 800; font-size: 1.2rem; font-family: 'Consolas', monospace; display: block; }
+        .price-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 700; }
 
-        .edit-label { font-size: 0.7rem; color: #8b949e; display: flex; align-items: center; gap: 5px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
+        .info-label { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 
-        .back-btn { width: 38px; height: 38px; border-radius: 10px; background: #21262d; border: 1px solid #30363d; color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .back-btn { color: white; text-decoration: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-<div class="header-section">
+<div class="header">
     <a href="purchase-mgmt.html" class="back-btn"><i class="fas fa-arrow-right"></i></a>
-    <h6 class="m-0 fw-bold">سجل فواتير  <span style="color: var(--neon-blue)">المشتريات</span></h6>
-    <i class="fas fa-sync-alt" onclick="init()" style="cursor:pointer; color: #8b949e; font-size: 1.1rem;"></i>
+    <h6 class="m-0 fw-bold">سجل فواتير المشتريات</h6>
+    <i class="fas fa-sync-alt" onclick="init()" style="cursor:pointer; font-size: 1.1rem;"></i>
 </div>
 
-<div class="container-fluid mt-2">
+<div class="container-fluid mt-2 p-0">
     <div class="stats-grid">
         <div class="stat-card">
             <span class="stat-label">صافي الشراء</span>
-            <span class="stat-val text-info" id="totalPurchase">0</span>
+            <span class="stat-val" style="color: var(--info)" id="totalPurchase">0</span>
         </div>
         <div class="stat-card">
-            <span class="stat-label">المدفوع فعلاً</span>
-            <span class="stat-val text-success" id="totalPaid">0</span>
+            <span class="stat-label">المدفوع</span>
+            <span class="stat-val" style="color: var(--success)" id="totalPaid">0</span>
         </div>
         <div class="stat-card">
             <span class="stat-label">المتبقي</span>
-            <span class="stat-val text-danger" id="totalPending">0</span>
+            <span class="stat-val" style="color: var(--danger)" id="totalPending">0</span>
         </div>
     </div>
 
@@ -110,7 +109,7 @@
     </div>
 
     <div id="invoicesContainer">
-        <div class="text-center mt-5"><div class="spinner-border text-primary" role="status"></div></div>
+        <div class="text-center mt-5"><div class="spinner-border text-success" role="status"></div></div>
     </div>
 </div>
 
@@ -183,7 +182,6 @@
 
             renderInvoices(allInvoices);
         } catch (error) {
-            console.error(error);
             document.getElementById('invoicesContainer').innerHTML = '<div class="text-danger text-center p-4">حدث خطأ في جلب البيانات</div>';
         }
     }
@@ -191,7 +189,7 @@
     function renderInvoices(dataList) {
         const container = document.getElementById('invoicesContainer');
         if(dataList.length === 0) {
-            container.innerHTML = '<div class="text-center opacity-50 mt-5">لا توجد سجلات حالياً</div>';
+            container.innerHTML = '<div class="text-center text-muted mt-5">لا توجد سجلات حالياً</div>';
             return;
         }
 
@@ -208,13 +206,13 @@
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-end mt-3">
-                    <div class="edit-label">
-                         <i class="fas fa-info-circle"></i>
-                         <span>تفاصيل العملية</span>
+                    <div class="info-label">
+                         <i class="fas fa-file-invoice"></i>
+                         <span>عرض التفاصيل</span>
                     </div>
                     <div class="price-tag">
-                        <span class="price-label">المبلغ الإجمالي</span>
-                        <span class="price-val" style="color: ${inv.isReturn ? 'var(--neon-red)' : '#fff'}">
+                        <span class="price-label">المبلغ</span>
+                        <span class="price-val" style="color: ${inv.isReturn ? 'var(--danger)' : 'var(--accent)'}">
                             ${inv.isReturn ? '-' : ''}${Number(inv.displayAmount).toLocaleString()}
                             <small style="font-size: 0.6rem;">ج.م</small>
                         </span>

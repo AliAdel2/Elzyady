@@ -9,46 +9,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        /* نظام ألوان شركة الزيادي الموحد */
         :root { 
-            --bg: #0d1117; 
-            --glass: rgba(255,255,255,0.05); 
-            --neon-red: #f85149; 
-            --neon-blue: #58a6ff;
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --danger: #d90429;
+            --success: #2d6a4f;
         }
 
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
 
+        /* Header */
         .header-section { 
-            padding: 20px 15px; background: rgba(20, 25, 35, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1); 
-            position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(15px);
+            padding: 15px; background: var(--header-bg); color: white;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex; justify-content: space-between; align-items: center;
         }
 
+        /* Input Cards */
         .input-group-custom {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 15px; margin-bottom: 20px;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
-        label { font-size: 0.85rem; color: var(--neon-blue); margin-bottom: 8px; display: block; font-weight: 600; }
+        label { font-size: 0.85rem; color: var(--accent); margin-bottom: 8px; display: block; font-weight: 700; }
 
         .form-control, .form-select {
-            background: rgba(0,0,0,0.2) !important; border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #fff !important; border-radius: 10px; padding: 10px;
+            background: #f8faf9 !important; border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important; border-radius: 12px; padding: 12px;
+            font-weight: 600;
         }
+        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 8px rgba(11, 94, 61, 0.1); }
 
+        /* Return Card Styles */
         .return-item-card {
-            background: rgba(248, 81, 73, 0.05); border: 1px dashed var(--neon-red);
-            border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            background: #fffafa; border: 1px dashed var(--danger);
+            border-radius: 18px; padding: 18px; margin-bottom: 15px;
         }
 
+        /* Buttons */
         .btn-return {
-            background: var(--neon-red); color: white; border: none; border-radius: 12px;
-            padding: 12px; width: 100%; font-weight: 700; transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(248, 81, 73, 0.3);
+            background: var(--danger); color: white; border: none; border-radius: 15px;
+            padding: 15px; width: 100%; font-weight: 800; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(217, 4, 41, 0.2);
         }
-        .btn-return:active { transform: scale(0.95); }
+        .btn-return:active { transform: scale(0.96); }
 
-        .back-btn { width: 40px; height: 40px; border-radius: 10px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .back-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        
+        .total-display-card {
+            background: var(--white);
+            border: 2px solid var(--danger);
+            border-radius: 20px;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -61,31 +80,37 @@
 
 <div class="container mt-4">
     <div class="input-group-custom">
-        <label>المورد</label>
+        <label><i class="fas fa-truck-loading me-1"></i> المورد</label>
         <select id="supplierSelect" class="form-select mb-3" onchange="loadSupplierInvoices()">
             <option value="">اختر المورد...</option>
         </select>
 
-        <label>رقم الفاتورة الأصلية (اختياري)</label>
+        <label><i class="fas fa-file-invoice me-1"></i> رقم الفاتورة الأصلية (اختياري)</label>
         <select id="invoiceSelect" class="form-select" onchange="loadInvoiceItems()">
             <option value="">اختر الفاتورة للارتجاع منها...</option>
         </select>
     </div>
 
     <div id="returnItemsContainer">
-        <div class="text-center opacity-50 p-4">حدد المورد أو الفاتورة لبدء الارتجاع</div>
+        <div class="text-center opacity-50 p-5 bg-white rounded-4 border">
+            <i class="fas fa-search fa-2x mb-3 text-muted"></i>
+            <p class="m-0">حدد المورد أو الفاتورة لبدء الارتجاع</p>
+        </div>
     </div>
 
-    <div class="input-group-custom mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span>إجمالي قيمة المرتجع:</span>
-            <h5 class="m-0 text-white" id="returnTotalDisplay">0.00 ج.م</h5>
+    <div class="total-display-card mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold">إجمالي قيمة المرتجع:</span>
+            <h4 class="m-0 fw-bold text-danger" id="returnTotalDisplay">0.00 ج.م</h4>
         </div>
-        <button class="btn-return mt-3" id="saveReturnBtn" onclick="saveReturn()">تأكيد حفظ المرتجع <i class="fas fa-undo-alt ms-2"></i></button>
+        <button class="btn-return mt-3" id="saveReturnBtn" onclick="saveReturn()">
+            تأكيد حفظ المرتجع <i class="fas fa-undo-alt ms-2"></i>
+        </button>
     </div>
 </div>
 
 <script type="module">
+    // الكود البرمجي كما هو بدون أي تعديل لضمان استقرار العمليات والـ Logic
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -121,7 +146,6 @@
         
         if(!supId) return;
 
-        // التعديل هنا: البحث عن نوع "شراء" و "فاتورة شراء" معاً لضمان الظهور
         const q = query(collection(db, "supplier_transactions"), where("supplierId", "==", supId));
         const snap = await getDocs(q);
         
@@ -130,7 +154,6 @@
         
         snap.forEach(d => {
             const data = d.data();
-            // فلترة الأنواع برمجياً لدعم المسميين
             if(data.type === "شراء" || data.type === "فاتورة شراء") {
                 const amount = data.total || data.amount || 0;
                 currentInvoices.push({id: d.id, ...data});
@@ -153,11 +176,11 @@
             const price = item.buy || item.buyPrice || 0;
             return `
                 <div class="return-item-card">
-                    <div class="d-flex justify-content-between mb-2">
-                        <h6 class="m-0 text-white item-name-text">${item.name}</h6>
-                        <small>السعر: ${price}</small>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6 class="m-0 fw-bold item-name-text" style="color: var(--accent);">${item.name}</h6>
+                        <span class="badge bg-light text-dark border">سعر الشراء: ${price}</span>
                     </div>
-                    <div class="row g-2">
+                    <div class="row g-3">
                         <div class="col-6">
                             <label>الكمية المرتجعة</label>
                             <input type="number" class="form-control qty-input" 
@@ -167,8 +190,8 @@
                                    oninput="calculateTotal()">
                         </div>
                         <div class="col-6">
-                            <label>الكمية بالفاتورة</label>
-                            <input type="text" class="form-control opacity-50" value="${item.qty}" disabled>
+                            <label>الكمية الأصلية</label>
+                            <input type="text" class="form-control" style="background:#eee !important" value="${item.qty}" disabled>
                         </div>
                     </div>
                 </div>
@@ -210,23 +233,20 @@
         });
 
         try {
-            // 1. تسجيل حركة المرتجع
             await addDoc(collection(db, "supplier_transactions"), {
                 supplierId: supId,
                 type: "مرتجع شراء",
-                total: totalAmount, // توحيد الحقل ليكون total
+                total: totalAmount,
                 items: returnedItems,
                 date: new Date().toISOString().split('T')[0],
                 timestamp: serverTimestamp()
             });
 
-            // 2. تحديث مديونية المورد (خصم المرتجع من المديونية)
             const supRef = doc(db, "suppliers", supId);
             await updateDoc(supRef, {
-                currentBalance: increment(-totalAmount) // استخدام currentBalance الموحد
+                currentBalance: increment(-totalAmount)
             });
 
-            // 3. تحديث كميات المخزن (خصم المرتجع من المخزن)
             for (const item of returnedItems) {
                 const q = query(collection(db, "inventory"), where("name", "==", item.name));
                 const qSnap = await getDocs(q);
