@@ -12,7 +12,27 @@
         body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 50px; }
         .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
         .invoice-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-top: 20px; }
-        .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff !important; font-size: 0.9rem; }
+        
+        /* تعديل حقول الإدخال لتوضيح الكتابة ومنع اللون الأبيض */
+        .form-control, .form-select { 
+            background: rgba(255,255,255,0.05) !important; 
+            border: 1px solid rgba(255,255,255,0.1) !important; 
+            border-radius: 12px; 
+            color: #fff !important; 
+            font-size: 0.9rem; 
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(255,255,255,0.1) !important;
+            border-color: var(--neon-blue) !important;
+            box-shadow: none;
+            color: #58a6ff !important; /* لون الكتابة عند التركيز */
+        }
+        /* حل مشكلة اللون الأبيض في حقول الأرقام */
+        input[type="number"] {
+            font-weight: bold;
+            color: #ffeb3b !important; /* لون أصفر مميز للأرقام عشان تبان */
+        }
+
         .product-row { background: rgba(255,255,255,0.02); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px dashed rgba(255,255,255,0.1); position: relative; }
         .btn-remove { position: absolute; left: 10px; top: 10px; color: #f85149; cursor: pointer; z-index: 10; }
         .total-box { background: rgba(88, 166, 255, 0.1); border-radius: 15px; padding: 15px; text-align: center; margin-top: 20px; border: 1px solid var(--neon-blue); }
@@ -26,7 +46,7 @@
 <body>
 
 <div class="header-nav">
-    <a href="sales-history.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
+    <a href="javascript:void(0)" onclick="confirmBack()" class="text-white"><i class="fas fa-arrow-right"></i></a>
     <h5 class="m-0 fw-bold">فاتورة مبيعات<span class="text-primary"></span></h5>
 </div>
 
@@ -105,6 +125,22 @@
     const db = getFirestore(app);
     let inventory = [];
     let editId = new URLSearchParams(window.location.search).get('edit');
+    let isChanged = false; // متغير لمتابعة التغييرات
+
+    // منع الخروج بالخطأ
+    window.onbeforeunload = function() {
+        if (isChanged) return "هل أنت متأكد من الخروج؟ هناك بيانات لم يتم حفظها.";
+    };
+
+    window.confirmBack = () => {
+        if (isChanged) {
+            if (confirm("لم يتم حفظ الفاتورة، هل تريد الرجوع فعلاً؟")) {
+                window.location.href = "sales-history.html";
+            }
+        } else {
+            window.location.href = "sales-history.html";
+        }
+    };
 
     async function init() {
         document.getElementById('invTime').value = new Date().toLocaleString('ar-EG');
@@ -144,27 +180,29 @@
                 addNewRow();
             }
             calc();
+            isChanged = false; // تصفير التغييرات عند التحميل الأول
         } catch (e) {
             console.error("Error loading data: ", e);
         }
     }
 
     window.addNewRow = (oldData = null) => {
+        if(!oldData) isChanged = true;
         const id = 'row_' + Math.random().toString(36).substr(2, 5);
         const html = `
             <div class="product-row" id="${id}">
-                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${id}').remove(); calc();"></i>
+                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${id}').remove(); calc(); isChanged=true;"></i>
                 <div class="row g-2 mb-2">
                     <div class="col-7">
                         <span class="sub-lbl">الصنف</span>
-                        <select class="form-select p-select" onchange="updateRowUnit(this)">
+                        <select class="form-select p-select" onchange="updateRowUnit(this); isChanged=true;">
                             <option value="">اختر المنتج...</option>
                             ${inventory.map(p => `<option value="${p.id}" ${oldData && oldData.stockId == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
                         </select>
                     </div>
                     <div class="col-5">
                         <span class="sub-lbl">الوحدة</span>
-                        <select class="form-select p-unit" onchange="updateRowPrice(this)">
+                        <select class="form-select p-unit" onchange="updateRowPrice(this); isChanged=true;">
                             <option value="box" ${oldData && oldData.unit == 'box' ? 'selected' : ''}>كرتونة</option>
                             <option value="pcs" ${oldData && oldData.unit == 'pcs' ? 'selected' : ''}>قطعة</option>
                         </select>
@@ -173,11 +211,11 @@
                 <div class="row g-2">
                     <div class="col-4">
                         <span class="sub-lbl">الكمية</span>
-                        <input type="number" class="form-control p-qty" value="${oldData ? oldData.qty : 1}" oninput="calc()">
+                        <input type="number" class="form-control p-qty" value="${oldData ? oldData.qty : 1}" oninput="calc(); isChanged=true;">
                     </div>
                     <div class="col-4">
                         <span class="sub-lbl">السعر</span>
-                        <input type="number" class="form-control p-price" value="${oldData ? oldData.price : ''}" oninput="calc()">
+                        <input type="number" class="form-control p-price" value="${oldData ? oldData.price : ''}" oninput="calc(); isChanged=true;">
                     </div>
                     <div class="col-4">
                         <span class="sub-lbl">إجمالي</span>
@@ -228,6 +266,7 @@
         } else {
             document.getElementById('paidAmount').value = 0;
         }
+        isChanged = true;
         calc();
     };
 
@@ -284,9 +323,9 @@
 
             if(editId) {
                 await updateDoc(doc(db, "invoices", editId), invoiceData);
+                isChanged = false; // تصفير التغييرات بعد الحفظ
                 alert("تم تحديث الفاتورة بنجاح");
             } else {
-                // تحديث المخزن والمديونية فقط عند إنشاء فاتورة جديدة
                 for(let key in items) {
                     const item = items[key];
                     const p = inventory.find(i => i.id === item.stockId);
@@ -299,6 +338,7 @@
                     await updateDoc(doc(db, "customers", invoiceData.customerId), { currentBalance: increment(remaining) });
                 }
                 await addDoc(collection(db, "invoices"), invoiceData);
+                isChanged = false; // تصفير التغييرات بعد الحفظ
                 alert("تم حفظ الفاتورة بنجاح");
             }
             window.location.href = "sales-history.html";
