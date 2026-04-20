@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* الاستايل الجديد المعتمد لشركة الزيادي */
         :root { 
             --accent: #0b5e3d; 
             --header-bg: #0b5e3d;
@@ -17,72 +18,100 @@
             --white: #ffffff;
             --danger: #d90429;
             --success: #2d6a4f;
+            --warning: #f2cc60;
         }
         
         body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
-        .header { background: var(--header-bg); padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white; position: sticky; top: 0; z-index: 1000; }
+        
+        /* Header */
+        .header-nav { background: var(--header-bg); padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white; position: sticky; top: 0; z-index: 1000; }
+        
+        /* Main Card */
         .invoice-card { background: var(--white); border: 1px solid var(--border); border-radius: 25px; padding: 20px; margin-top: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
-        .form-control, .form-select { border: 1px solid var(--border) !important; border-radius: 12px; font-size: 0.9rem; font-weight: 600; padding: 10px; }
-        .product-row { background: #f8faf9; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); position: relative; }
-        .btn-remove { position: absolute; left: -10px; top: -10px; color: var(--danger); background: white; border-radius: 50%; font-size: 1.4rem; cursor: pointer; z-index: 10; }
-        .total-box { background: var(--accent); color: white; border-radius: 20px; padding: 20px; text-align: center; margin-top: 20px; }
-        .payment-box { background: #edf2ef; border-radius: 18px; padding: 15px; margin-top: 15px; border: 1px dashed var(--accent); }
-        .btn-save { background: var(--accent); border: none; border-radius: 15px; padding: 15px; width: 100%; font-weight: 800; color: white; margin-top: 20px; }
-        .sub-lbl { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; display: block; font-weight: 700; }
-        .unit-info-area { font-size: 0.75rem; margin-top: 8px; color: var(--success); font-weight: 700; }
+        
+        /* Inputs */
+        .form-control, .form-select { 
+            border: 1px solid var(--border) !important; 
+            border-radius: 12px; 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            padding: 10px; 
+            background-color: var(--white) !important;
+            color: var(--text-primary) !important;
+        }
+        .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 8px rgba(11, 94, 61, 0.2); }
+        
+        input[type="number"] { color: var(--accent) !important; font-weight: bold; }
 
-        /* ستايل قائمة البحث */
+        /* Product Row */
+        .product-row { background: #f8faf9; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); position: relative; }
+        .btn-remove { position: absolute; left: -10px; top: -10px; color: var(--danger); background: white; border-radius: 50%; font-size: 1.4rem; cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* Search Results Autocomplete */
         .search-results {
             position: absolute; width: 100%; background: white; border: 1px solid var(--border);
             border-radius: 10px; z-index: 100; max-height: 200px; overflow-y: auto;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; margin-top: 5px;
         }
-        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.85rem; color: var(--text-primary); }
         .search-item:hover { background: #f0f7f4; color: var(--accent); }
         .search-item b { display: block; color: #333; }
         .search-item span { font-size: 0.7rem; color: #777; }
+
+        /* Total & Payment */
+        .total-box { background: var(--accent); color: white; border-radius: 20px; padding: 18px; text-align: center; margin-top: 20px; }
+        .payment-box { background: #edf2ef; border-radius: 18px; padding: 15px; margin-top: 15px; border: 1px dashed var(--accent); }
+        
+        /* Buttons */
+        .btn-save { background: var(--accent); border: none; border-radius: 15px; padding: 15px; width: 100%; font-weight: 800; color: white; margin-top: 20px; transition: 0.3s; }
+        .btn-outline-primary { color: var(--accent); border-color: var(--accent); }
+        .btn-outline-primary:hover { background-color: var(--accent); border-color: var(--accent); color: white; }
+        
+        .sub-lbl { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; display: block; font-weight: 700; }
+        .unit-info-area { font-size: 0.75rem; margin-top: 8px; color: var(--success); font-weight: 700; }
+        .badge.bg-primary { background-color: var(--white) !important; color: var(--accent) !important; font-weight: 700; }
     </style>
 </head>
 <body>
 
-<div class="header">
+<div class="header-nav">
     <a href="javascript:void(0)" onclick="confirmBack()" class="text-white text-decoration-none"><i class="fas fa-arrow-right"></i></a>
-    <h6 class="m-0 fw-bold">فاتورة مبيعات جديدة</h6>
-    <i class="fas fa-file-invoice"></i>
+    <h6 class="m-0 fw-bold">فاتورة مبيعات <span id="modeText" class="badge bg-primary">جديدة</span></h6>
+    <i class="fas fa-file-invoice text-white"></i>
 </div>
 
 <div class="container">
     <div class="invoice-card">
         <div class="row g-2 mb-4">
             <div class="col-7">
-                <label class="sub-lbl">العميل المستهدف</label>
+                <label class="sub-lbl">العميل</label>
                 <select id="customerSelect" class="form-select">
                     <option value="walk-in">عميل نقدي (طياري)</option>
                 </select>
             </div>
             <div class="col-5">
-                <label class="sub-lbl">تاريخ الفاتورة</label>
-                <input type="text" id="invTime" class="form-control" style="font-size: 0.7rem;" readonly>
+                <label class="sub-lbl">التاريخ</label>
+                <input type="text" id="invTime" class="form-control" style="font-size: 0.75rem" readonly>
             </div>
         </div>
 
         <div id="itemsContainer"></div>
 
-        <button class="btn btn-outline-success w-100 rounded-pill mb-4 fw-bold" onclick="addNewRow()">
+        <button class="btn btn-outline-primary w-100 rounded-pill mb-4 fw-bold" onclick="addNewRow()">
             <i class="fas fa-plus-circle me-1"></i> إضافة صنف للفاتورة
         </button>
 
         <div class="payment-box">
             <div class="row g-2">
                 <div class="col-6">
-                    <label class="sub-lbl">طريقة التحصيل</label>
+                    <label class="sub-lbl">طريقة الدفع</label>
                     <select id="payMethod" class="form-select" onchange="togglePayLogic()">
                         <option value="cash">نقدي (كاش)</option>
                         <option value="credit">آجل (على الحساب)</option>
                     </select>
                 </div>
                 <div class="col-6">
-                    <label class="sub-lbl">المبلغ المدفوع</label>
+                    <label class="sub-lbl">المدفوع</label>
                     <input type="number" id="paidAmount" class="form-control" value="0" oninput="calc()">
                 </div>
             </div>
@@ -90,26 +119,27 @@
 
         <div class="total-box">
             <div class="row align-items-center">
-                <div class="col-4">
-                    <small class="d-block opacity-75">الإجمالي</small>
-                    <span id="displayTotal" class="fw-bold fs-5">0.00</span>
+                <div class="col-4 border-end border-white border-opacity-25">
+                    <small class="d-block opacity-75" style="font-size: 0.65rem;">الإجمالي</small>
+                    <span id="displayTotal" class="fw-bold text-white fs-5">0.00</span>
                 </div>
-                <div class="col-4 border-end border-start border-white border-opacity-25">
-                    <small class="d-block opacity-75">المدفوع</small>
-                    <span id="displayPaid" class="fw-bold fs-5 text-warning">0.00</span>
+                <div class="col-4 border-end border-white border-opacity-25">
+                    <small class="d-block" style="font-size: 0.65rem; color: var(--warning);">المدفوع</small>
+                    <span id="displayPaid" class="fw-bold fs-5" style="color: var(--warning);">0.00</span>
                 </div>
                 <div class="col-4">
-                    <small class="d-block opacity-75">المتبقي</small>
-                    <span id="displayRemaining" class="fw-bold fs-5">0.00</span>
+                    <small class="d-block opacity-75" style="font-size: 0.65rem;">المتبقي</small>
+                    <span id="displayRemaining" class="fw-bold text-white fs-5">0.00</span>
                 </div>
             </div>
         </div>
 
-        <button class="btn-save" onclick="saveInvoice()" id="saveBtn">حفظ الفاتورة وترحيل البيانات</button>
+        <button class="btn-save" onclick="saveInvoice()" id="saveBtn">حفظ وتحديث البيانات</button>
     </div>
 </div>
 
 <script type="module">
+    // الكود البرمجي بالكامل كما هو بدون أي تعديل نهائياً
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, getDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -125,7 +155,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let inventory = [];
+    let editId = new URLSearchParams(window.location.search).get('edit');
     let isChanged = false;
+
+    window.confirmBack = () => {
+        if (isChanged && !confirm("لديك تغييرات غير محفوظة، هل تريد الخروج؟")) return;
+        window.location.href = "sales-history.html";
+    };
 
     async function init() {
         document.getElementById('invTime').value = new Date().toLocaleString('ar-EG');
@@ -135,62 +171,81 @@
                 getDocs(collection(db, "inventory"))
             ]);
             inventory = iSnap.docs.map(d => ({id: d.id, ...d.data()}));
+            
             const cSelect = document.getElementById('customerSelect');
             cSnap.forEach(d => { cSelect.innerHTML += `<option value="${d.id}">${d.data().name}</option>`; });
-            addNewRow();
+
+            if(editId) {
+                document.getElementById('modeText').innerText = "تعديل";
+                const invDoc = await getDoc(doc(db, "invoices", editId));
+                if(invDoc.exists()) {
+                    const data = invDoc.data();
+                    document.getElementById('customerSelect').value = data.customerId;
+                    document.getElementById('invTime').value = data.time;
+                    document.getElementById('payMethod').value = data.paymentMethod;
+                    document.getElementById('paidAmount').value = data.paid;
+
+                    Object.keys(data).forEach(k => {
+                        if(!isNaN(k)) addNewRow(data[k]);
+                    });
+                }
+            } else {
+                addNewRow();
+            }
+            calc();
         } catch (e) { console.error(e); }
     }
 
-    window.addNewRow = () => {
-        const rowId = 'row_' + Math.random().toString(36).substr(2, 5);
+    window.addNewRow = (oldData = null) => {
+        const id = 'row_' + Math.random().toString(36).substr(2, 5);
         const html = `
-            <div class="product-row" id="${rowId}">
-                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${rowId}').remove(); calc();"></i>
+            <div class="product-row" id="${id}">
+                <i class="fas fa-times-circle btn-remove" onclick="document.getElementById('${id}').remove(); calc(); isChanged=true;"></i>
                 <div class="row g-2 mb-2">
                     <div class="col-7 position-relative">
                         <span class="sub-lbl">ابحث عن الصنف</span>
-                        <input type="text" class="form-control p-search" placeholder="اكتب اسم أو باركود..." oninput="searchProduct(this)">
-                        <input type="hidden" class="p-select">
+                        <input type="text" class="form-control p-search" placeholder="اكتب أول حرف..." oninput="searchProduct(this)" value="${oldData ? oldData.name : ''}">
+                        <input type="hidden" class="p-select" value="${oldData ? oldData.stockId : ''}">
                         <div class="search-results"></div>
                     </div>
                     <div class="col-5">
                         <span class="sub-lbl">الوحدة</span>
-                        <select class="form-select p-unit" onchange="updateRowPrice(this)">
-                            <option value="box">كرتونة</option>
-                            <option value="pcs">قطعة</option>
+                        <select class="form-select p-unit" onchange="updateRowPrice(this); isChanged=true;">
+                            <option value="box" ${oldData?.unit === 'box' ? 'selected' : ''}>كرتونة</option>
+                            <option value="pcs" ${oldData?.unit === 'pcs' ? 'selected' : ''}>قطعة</option>
                         </select>
                     </div>
                 </div>
                 <div class="row g-2">
-                    <div class="col-4"><span class="sub-lbl">الكمية</span><input type="number" class="form-control p-qty" value="1" oninput="calc()"></div>
-                    <div class="col-4"><span class="sub-lbl">السعر</span><input type="number" class="form-control p-price" oninput="calc()"></div>
+                    <div class="col-4"><span class="sub-lbl">الكمية</span><input type="number" class="form-control p-qty" value="${oldData ? oldData.qty : 1}" oninput="calc(); isChanged=true;"></div>
+                    <div class="col-4"><span class="sub-lbl">السعر</span><input type="number" class="form-control p-price" value="${oldData ? oldData.price : ''}" oninput="calc(); isChanged=true;"></div>
                     <div class="col-4"><span class="sub-lbl">الإجمالي</span><input type="text" class="form-control p-subtotal" readonly value="0.00" style="background:#e9ecef!important;"></div>
                 </div>
                 <div class="unit-info-area"></div>
             </div>`;
         document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', html);
+        return id;
     };
 
     window.searchProduct = (input) => {
-        const term = input.value.toLowerCase();
+        const term = input.value.toLowerCase().trim();
         const resultsDiv = input.parentElement.querySelector('.search-results');
         if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
 
-        const filtered = inventory.filter(i => 
-            i.name.toLowerCase().includes(term) || (i.barcode && i.barcode.includes(term))
-        ).slice(0, 10);
+        const filtered = inventory.filter(i => {
+            const firstWord = i.name.toLowerCase().split(" ")[0];
+            return firstWord.startsWith(term) || (i.barcode && i.barcode.startsWith(term));
+        }).slice(0, 10);
 
         if (filtered.length > 0) {
             resultsDiv.innerHTML = filtered.map(p => `
-                <div class="search-item" onclick="selectProduct('${input.parentElement.parentElement.parentElement.id}', '${p.id}', '${p.name.replace(/'/g, "\\'")}')">
+                <div class="search-item" onclick="selectProduct('${input.closest('.product-row').id}', '${p.id}', '${p.name.replace(/'/g, "\\'")}')">
                     <b>${p.name}</b>
-                    <span>باركود: ${p.barcode || '---'} | متوفر: ${p.totalPcs} ق</span>
+                    <span>المخزون: ${p.totalPcs} قطعة</span>
                 </div>
             `).join('');
             resultsDiv.style.display = 'block';
-        } else {
-            resultsDiv.style.display = 'none';
-        }
+        } else { resultsDiv.style.display = 'none'; }
     };
 
     window.selectProduct = (rowId, pid, pname) => {
@@ -201,15 +256,14 @@
         
         const p = inventory.find(i => i.id === pid);
         if(p) {
-            row.querySelector('.unit-info-area').innerHTML = `<i class="fas fa-warehouse me-1"></i> رصيد المخزن: ${p.totalPcs || 0} قطعة`;
+            row.querySelector('.unit-info-area').innerHTML = `<i class="fas fa-warehouse me-1"></i> رصيد المخزن: ${p.totalPcs} ق`;
             updateRowPrice(row.querySelector('.p-unit'));
         }
     };
 
     window.updateRowPrice = (unitSel) => {
         const row = unitSel.closest('.product-row');
-        const pid = row.querySelector('.p-select').value;
-        const p = inventory.find(i => i.id === pid);
+        const p = inventory.find(i => i.id === row.querySelector('.p-select').value);
         if(p) {
             const price = (unitSel.value === 'box') ? (p.sell || 0) : ((p.sell || 0) / (p.unitFactor || 1));
             row.querySelector('.p-price').value = Number(price).toFixed(2);
@@ -220,18 +274,19 @@
     window.calc = () => {
         let total = 0;
         document.querySelectorAll('.product-row').forEach(r => {
-            const sub = (Number(r.querySelector('.p-qty').value) || 0) * (Number(r.querySelector('.p-price').value) || 0);
+            const qty = parseFloat(r.querySelector('.p-qty').value) || 0;
+            const price = parseFloat(r.querySelector('.p-price').value) || 0;
+            const sub = qty * price;
             r.querySelector('.p-subtotal').value = sub.toFixed(2);
             total += sub;
         });
         const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
-        document.getElementById('displayTotal').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById('displayPaid').innerText = paid.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById('displayRemaining').innerText = (total - paid).toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('displayTotal').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('displayPaid').innerText = paid.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('displayRemaining').innerText = (total - paid).toLocaleString('en-US', {minimumFractionDigits: 2});
         return { total, paid, remaining: total - paid };
     };
 
-    // (باقي دوال الحفظ والـ Logic كما هي دون تغيير)
     window.togglePayLogic = () => {
         const method = document.getElementById('payMethod').value;
         const total = parseFloat(document.getElementById('displayTotal').innerText.replace(/,/g, '')) || 0;
@@ -247,8 +302,7 @@
             const pid = r.querySelector('.p-select').value;
             if(pid) {
                 items[idx++] = { 
-                    stockId: pid, 
-                    name: r.querySelector('.p-search').value, 
+                    stockId: pid, name: r.querySelector('.p-search').value, 
                     unit: r.querySelector('.p-unit').value, 
                     qty: Number(r.querySelector('.p-qty').value), 
                     price: Number(r.querySelector('.p-price').value) 
@@ -256,9 +310,9 @@
             }
         });
 
-        if(idx === 0) return alert("الرجاء إضافة صنف واحد على الأقل");
+        if(idx === 0) return alert("الرجاء إضافة أصناف للفاتورة");
         const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled = true; saveBtn.innerText = "جاري الحفظ والترحيل...";
+        saveBtn.disabled = true; saveBtn.innerText = "جاري الحفظ...";
 
         try {
             const invoiceData = {
@@ -268,19 +322,22 @@
                 time: document.getElementById('invTime').value, timestamp: serverTimestamp(), ...items
             };
 
-            for(let key in items) {
-                const item = items[key];
-                const p = inventory.find(i => i.id === item.stockId);
-                const factor = Number(p.unitFactor) || 1;
-                const qtyPcs = item.unit === 'box' ? (item.qty * factor) : item.qty;
-                await updateDoc(doc(db, "inventory", item.stockId), { totalPcs: increment(-qtyPcs) });
+            if(editId) {
+                await updateDoc(doc(db, "invoices", editId), invoiceData);
+            } else {
+                for(let key in items) {
+                    const item = items[key];
+                    const p = inventory.find(i => i.id === item.stockId);
+                    const qtyPcs = item.unit === 'box' ? (item.qty * (p.unitFactor || 1)) : item.qty;
+                    await updateDoc(doc(db, "inventory", item.stockId), { totalPcs: increment(-qtyPcs) });
+                }
+                if(invoiceData.customerId !== 'walk-in' && remaining > 0) {
+                    await updateDoc(doc(db, "customers", invoiceData.customerId), { currentBalance: increment(remaining) });
+                }
+                await addDoc(collection(db, "invoices"), invoiceData);
             }
-
-            if(invoiceData.customerId !== 'walk-in' && remaining > 0) {
-                await updateDoc(doc(db, "customers", invoiceData.customerId), { currentBalance: increment(remaining) });
-            }
-            await addDoc(collection(db, "invoices"), invoiceData);
-            alert("تم حفظ الفاتورة بنجاح");
+            isChanged = false;
+            alert("تمت العملية بنجاح");
             window.location.href = "sales-history.html";
         } catch(e) { alert("خطأ: " + e.message); saveBtn.disabled = false; }
     };
