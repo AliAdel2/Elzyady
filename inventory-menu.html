@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المخزون - Warchat Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --bg-dark: #0d1117; 
+            --glass: rgba(255, 255, 255, 0.05); 
+            --neon-blue: #58a6ff;
+            --neon-purple: #bc8cff;
+            --neon-green: #3fb950;
+            --neon-orange: #d29922;
+            --neon-red: #f85149;
+            --text-gray: #c9d1d9;
+        }
+
+        body { 
+            background: var(--bg-dark); 
+            font-family: 'Cairo', sans-serif; 
+            color: var(--text-gray); 
+            padding: 10px; 
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 10px;
+        }
+
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+        }
+
+        .back-btn {
+            color: var(--text-gray);
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        
+        .back-btn:hover { color: var(--neon-blue); }
+
+        .menu-container {
+            padding: 10px;
+        }
+
+        .menu-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            border-color: rgba(88, 166, 255, 0.4);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-left: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-green { color: var(--neon-green); text-shadow: 0 0 10px rgba(63, 185, 80, 0.3); }
+        .text-blue { color: var(--neon-blue); text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
+        .text-purple { color: var(--neon-purple); text-shadow: 0 0 10px rgba(188, 140, 255, 0.3); }
+        .text-orange { color: var(--neon-orange); text-shadow: 0 0 10px rgba(210, 153, 34, 0.3); }
+        .text-cyan { color: #39c5bb; text-shadow: 0 0 10px rgba(57, 197, 187, 0.3); }
+        .text-red { color: var(--neon-red); text-shadow: 0 0 10px rgba(248, 81, 73, 0.3); }
+
+        .card-content { flex-grow: 1; }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 3px;
+            color: #f0f6fc;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: #8b949e;
+            line-height: 1.3;
+        }
+
+        .arrow-icon {
+            color: #484f58;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        
+        .menu-card:hover .arrow-icon { color: var(--neon-blue); transform: translateX(-5px); }
+    </style>
+</head>
+<body>
+
+    <div class="header-nav">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-right"></i></a>
+        <div class="header-title">إدارة المخزون</div>
+        <div style="width: 24px;"></div> 
+    </div>
+
+    <div class="menu-container">
+        
+        <a href="add-product.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">إضافة منتج جديد</div>
+                <div class="card-desc">تعريف صنف جديد ببياناته وأسعاره</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-plus-circle text-green"></i>
+            </div>
+        </a>
+
+        <a href="inventory-list.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">عرض المنتجات</div>
+                <div class="card-desc">قائمة بكافة الأصناف وحالة المخزن</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-boxes text-blue"></i>
+            </div>
+        </a>
+
+        <a href="tacnefat.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">إضافة تصنيف جديد</div>
+                <div class="card-desc">تنظيم المنتجات في مجموعات ذكية</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-layer-group text-purple"></i>
+            </div>
+        </a>
+
+        <a href="editablecells.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">تعديل الأسعار</div>
+                <div class="card-desc">تحديث سريع لأسعار البيع والشراء</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-tags text-orange"></i>
+            </div>
+        </a>
+
+        <a href="upload_excel.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">استيراد من ملف Excel</div>
+                <div class="card-desc">رفع كميات كبيرة من البيانات بضغطة واحدة</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-file-excel text-cyan"></i>
+            </div>
+        </a>
+
+        <a href="trash.html" class="menu-card">
+            <i class="fas fa-chevron-left arrow-icon"></i>
+            <div class="card-content">
+                <div class="card-title">سلة المحذوفات</div>
+                <div class="card-desc">استعادة الأصناف التي تم حذفها مؤقتاً</div>
+            </div>
+            <div class="icon-box">
+                <i class="fas fa-trash-alt text-red"></i>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>

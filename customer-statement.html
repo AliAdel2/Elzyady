@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كشف حساب - Masar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-red: #f85149; --neon-orange: #f0883e; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; }
+        
+        .header-section { padding: 10px 15px; background: #010409; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 1000; }
+        .btn-action { width: 35px; height: 35px; border-radius: 8px; border: 1px solid #30363d; background: #21262d; color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; border:none; }
+
+        .summary-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin: 15px 0; border: 1px solid #30363d; }
+        .balance-val { font-size: 1.6rem; font-weight: 800; color: #fff; font-family: 'Consolas', monospace; }
+        
+        .statement-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .statement-table thead th { color: #8b949e; font-size: 0.7rem; text-align: center; border: none; padding-bottom: 10px; }
+        .statement-table tbody tr { background: #1c2128; transition: 0.3s; }
+        .statement-table td { padding: 12px 5px; text-align: center; vertical-align: middle; border-top: 1px solid #30363d; border-bottom: 1px solid #30363d; font-size: 0.8rem; }
+        
+        .statement-table td:first-child { border-right: 1px solid #30363d; border-radius: 0 12px 12px 0; }
+        .statement-table td:last-child { border-left: 1px solid #30363d; border-radius: 12px 0 0 12px; }
+
+        /* ألوان المسميات الجديدة */
+        .type-invoice { color: var(--neon-blue); font-weight: 700; }
+        .type-receive { color: var(--neon-green); font-weight: 700; }
+        .type-pay { color: var(--neon-orange); font-weight: 700; }
+
+        .num-font { font-family: 'Consolas', monospace; font-weight: 600; }
+        .val-minus { color: var(--neon-green); }
+        .badge-status { font-size: 0.65rem; padding: 3px 10px; border-radius: 5px; font-weight: bold; }
+
+        #print-area { display: none; background: #ffffff !important; color: #000000 !important; padding: 30px; width: 100%; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; }
+        .pdf-table th { background: #f2f2f2 !important; color: #000 !important; border: 1px solid #000; padding: 8px; }
+        .pdf-table td { border: 1px solid #000; padding: 8px; text-align: center; color: #000 !important; }
+        
+        @media print {
+            body { background: white !important; }
+            #content-to-export { display: none !important; }
+            #print-area { display: block !important; position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="content-to-export">
+    <div class="header-section d-flex justify-content-between align-items-center">
+        <div class="d-flex gap-2">
+            <button class="btn-action text-danger" onclick="generatePDF()"><i class="fas fa-file-pdf"></i></button>
+            <button class="btn-action text-success" onclick="exportToExcel()"><i class="fas fa-file-excel"></i></button>
+            <button class="btn-action" onclick="window.print()"><i class="fas fa-print"></i></button>
+        </div>
+        <h6 class="m-0 fw-bold" id="titleName">كشف حساب</h6>
+        <a href="javascript:history.back()" class="btn-action"><i class="fas fa-arrow-left"></i></a>
+    </div>
+
+    <div class="container mt-2">
+        <div class="summary-card d-flex justify-content-between align-items-end">
+            <div>
+                <span class="small opacity-50">رصيد افتتاحي (سابق)</span>
+                <div class="fw-bold" id="displayOpening" style="font-size: 0.85rem;">0.00</div>
+            </div>
+            <div class="text-end">
+                <span class="small opacity-50">صافي المديونية الحالية</span>
+                <div id="displayTotal" class="balance-val">0.00</div>
+                <div id="balanceType" class="badge-status">---</div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="statement-table" id="myTable">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">التاريخ</th>
+                        <th class="text-end" style="width: 40%; padding-right: 15px;">البيان</th>
+                        <th style="width: 20%;">إجمالي</th>
+                        <th style="width: 20%;">مسدد</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="print-area">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+        <h2 style="margin:0; color:#000;">شركة الزيادي لقطع الغيار</h2>
+        <p style="margin:5px 0; font-size: 14px; color:#000;">تقرير كشف حساب عميل</p>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color:#000;">
+        <div style="text-align: right;">
+            <strong>العميل:</strong> <span id="p-name"></span><br>
+            <strong>الرصيد الافتتاحي:</strong> <span id="p-opening"></span> ج.م
+        </div>
+        <div style="text-align: left;">
+            <strong>تاريخ التقرير:</strong> <span id="p-date"></span><br>
+        </div>
+    </div>
+    <table class="pdf-table">
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>البيان</th>
+                <th>إجمالي القيمة</th>
+                <th>المبلغ المسدد</th>
+            </tr>
+        </thead>
+        <tbody id="printBody"></tbody>
+    </table>
+    <div style="margin-top: 30px; text-align: left; border-top: 2px solid #000; padding-top: 10px;">
+        <span style="font-size: 18px; color:#000;">إجمالي الرصيد النهائي المستحق: </span>
+        <span id="p-balance" style="font-size: 22px; font-weight: bold; color:#000;"></span>
+        <span style="color:#000;"> ج.م</span>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const urlParams = new URLSearchParams(window.location.search);
+    const custId = urlParams.get('id');
+
+    async function loadStatement() {
+        if(!custId) return;
+        try {
+            const custSnap = await getDoc(doc(db, "customers", custId));
+            let opening = 0;
+            if(custSnap.exists()){
+                const d = custSnap.data();
+                opening = Number(d.initialBalance) || 0;
+                document.getElementById('titleName').innerText = `كشف: ${d.name}`;
+                document.getElementById('displayOpening').innerText = opening.toLocaleString() + " ج.م";
+                document.getElementById('p-opening').innerText = opening.toLocaleString();
+                document.getElementById('p-name').innerText = d.name;
+                document.getElementById('p-date').innerText = new Date().toLocaleDateString('ar-EG');
+            }
+
+            const qInv = query(collection(db, "invoices"), where("customerId", "==", custId));
+            const qTr = query(collection(db, "transactions"), where("partyId", "==", custId));
+            const [iS, tS] = await Promise.all([getDocs(qInv), getDocs(qTr)]);
+
+            let list = [];
+            iS.forEach(s => {
+                const v = s.data();
+                list.push({ 
+                    d: v.time || '---', 
+                    t: 'فاتورة مبيعات', 
+                    class: 'type-invoice',
+                    n: `رقم: ${s.id.substring(0,6).toUpperCase()}`, 
+                    tot: Number(v.total)||0, 
+                    p: Number(v.paid)||0, 
+                    r: Number(v.remaining)||0, 
+                    ts: v.timestamp?.seconds||0 
+                });
+            });
+            tS.forEach(s => {
+                const v = s.data();
+                const isP = v.type === 'قبض';
+                list.push({ 
+                    d: v.date || '---', 
+                    t: isP?'سند قبض':'سند صرف', 
+                    class: isP ? 'type-receive' : 'type-pay',
+                    n: v.notes || (isP?'نقدية':'صرف'), 
+                    tot: 0, 
+                    p: Number(v.amount)||0, 
+                    r: isP ? -(Number(v.amount)||0) : (Number(v.amount)||0), 
+                    ts: v.createdAt?.seconds||0 
+                });
+            });
+
+            list.sort((a,b) => b.ts - a.ts);
+            
+            const tbody = document.getElementById('statementBody');
+            const pbody = document.getElementById('printBody');
+            tbody.innerHTML = ''; pbody.innerHTML = '';
+            
+            let runningDebt = opening;
+            list.forEach(item => {
+                runningDebt += item.r;
+                let ds = item.d.split(' ')[0];
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${ds}</td>
+                        <td class="text-end" style="padding-right:15px;">
+                            <div class="${item.class}">${item.t}</div>
+                            <div style="font-size:0.6rem; color:#8b949e;">${item.n}</div>
+                        </td>
+                        <td class="num-font">${item.tot > 0 ? item.tot.toLocaleString() : '-'}</td>
+                        <td class="num-font val-minus">${item.p > 0 ? item.p.toLocaleString() : '-'}</td>
+                    </tr>`;
+                
+                pbody.innerHTML += `<tr><td>${ds}</td><td style="text-align:right;">${item.t} (${item.n})</td><td>${item.tot || '-'}</td><td>${item.p || '-'}</td></tr>`;
+            });
+
+            document.getElementById('displayTotal').innerText = runningDebt.toLocaleString();
+            document.getElementById('p-balance').innerText = runningDebt.toLocaleString();
+            
+            const badge = document.getElementById('balanceType');
+            if (runningDebt > 0) {
+                badge.innerText = 'مديونية مستحقة';
+                badge.style.color = 'var(--neon-red)';
+            } else if (runningDebt < 0) {
+                badge.innerText = 'رصيد دائن (له)';
+                badge.style.color = 'var(--neon-blue)';
+            } else {
+                badge.innerText = 'خالص';
+                badge.style.color = 'var(--neon-green)';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    window.generatePDF = () => {
+        const element = document.getElementById('print-area');
+        element.style.display = 'block';
+        const opt = {
+            margin: [10, 5, 10, 5],
+            filename: `كشف_حساب_${document.getElementById('p-name').innerText}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(element).set(opt).save().then(() => { element.style.display = 'none'; });
+    };
+
+    window.exportToExcel = () => { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("myTable")), `كشف_حساب.xlsx`); };
+    loadStatement();
+</script>
+</body>
+</html>

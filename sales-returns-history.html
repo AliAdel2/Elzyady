@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل المرتجعات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-red: #f85149; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; }
+        .header-nav { padding: 20px; background: var(--glass); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
+        .search-box { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 10px 15px; width: 100%; margin-bottom: 20px; }
+        .return-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-right: 4px solid var(--neon-red); }
+        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #8b949e; }
+        .modal-content { background: #161b22; color: #fff; border-radius: 20px; border: 1px solid var(--neon-red); }
+        .amount-badge { color: var(--neon-red); font-weight: bold; font-size: 1.1rem; }
+        #printFrame { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header-nav d-flex justify-content-between align-items-center">
+    <h5 class="m-0 fw-bold">سجل مرتجعات <span class="text-danger"></span></h5>
+    <a href="sales-return.html" class="btn btn-danger btn-sm rounded-pill">+ مرتجع جديد</a>
+</div>
+
+<div class="container mt-3">
+    <input type="text" id="searchInput" class="search-box" placeholder="ابحث باسم العميل..." oninput="filterReturns()">
+    
+    <div id="returnsList">
+        <div class="text-center p-5"><div class="spinner-border text-danger"></div></div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" id="modalBody"></div>
+            <div class="p-3 pt-0"><button class="btn btn-secondary w-100 rounded-pill" data-bs-dismiss="modal">إغلاق</button></div>
+        </div>
+    </div>
+</div>
+
+<iframe id="printFrame"></iframe>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allReturns = [];
+
+    window.loadReturns = async () => {
+        const snap = await getDocs(query(collection(db, "returns"), orderBy("timestamp", "desc")));
+        allReturns = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        render(allReturns);
+    };
+
+    function render(data) {
+        const list = document.getElementById('returnsList');
+        if(data.length === 0) {
+            list.innerHTML = '<div class="text-center opacity-50 mt-5">لا توجد عمليات مرتجع مسجلة</div>';
+            return;
+        }
+        list.innerHTML = data.map(ret => `
+            <div class="return-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <b class="d-block mb-1 text-white">${ret.customerName}</b>
+                        <small class="opacity-50" style="font-size: 0.75rem;">${ret.date || ret.time}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="amount-badge">-${Number(ret.totalAmount || ret.total).toLocaleString()} ج.م</div>
+                        <small class="text-secondary" style="font-size:0.7rem">رقم الفاتورة: ${ret.invoiceId ? ret.invoiceId.slice(-5) : 'عام'}</small>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-around mt-3 border-top border-secondary pt-2">
+                    <button class="action-btn text-info" onclick="viewReturn('${ret.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn text-warning" onclick="printReturn('${ret.id}')"><i class="fas fa-print"></i></button>
+                    <button class="action-btn text-danger" onclick="deleteReturnRecord('${ret.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.filterReturns = () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allReturns.filter(r => r.customerName.toLowerCase().includes(term));
+        render(filtered);
+    };
+
+    window.viewReturn = (id) => {
+        const ret = allReturns.find(r => r.id === id);
+        let itemsHtml = "";
+        
+        // التعامل مع مصفوفة الأصناف المخزنة في المرتجع
+        const items = ret.items || [];
+        items.forEach(item => {
+            itemsHtml += `
+            <div class="d-flex justify-content-between border-bottom border-secondary py-2 small">
+                <span>${item.name} (x${item.qty})</span>
+                <b>${(item.qty * item.price).toLocaleString()} ج.م</b>
+            </div>`;
+        });
+
+        document.getElementById('modalBody').innerHTML = `
+            <h6 class="text-danger mb-3"><i class="fas fa-undo-alt me-2"></i>تفاصيل المرتجع</h6>
+            <div class="small mb-3 opacity-75">فاتورة أصلية: ${ret.invoiceId || 'غير محدد'}</div>
+            ${itemsHtml}
+            <div class="mt-3 p-2 rounded bg-danger bg-opacity-10 d-flex justify-content-between">
+                <span>إجمالي المبلغ المسترد:</span>
+                <b class="text-danger">${Number(ret.totalAmount || ret.total).toLocaleString()} ج.م</b>
+            </div>`;
+        new bootstrap.Modal(document.getElementById('detailsModal')).show();
+    };
+
+    window.printReturn = (id) => {
+        const ret = allReturns.find(r => r.id === id);
+        let rows = "";
+        const items = ret.items || [];
+        items.forEach(item => {
+            rows += `<tr>
+                <td style="padding:5px; border-bottom:1px dashed #ccc;">${item.name}</td>
+                <td style="text-align:center;">${item.qty}</td>
+                <td style="text-align:left;">${(item.qty * item.price)}</td>
+            </tr>`;
+        });
+
+        const pri = document.getElementById('printFrame').contentWindow;
+        const printContent = `
+            <html dir="rtl"><head><style>
+                body { font-family: 'Arial'; padding: 10px; width: 72mm; margin: 0; }
+                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                table { width: 100%; font-size: 13px; margin-top: 10px; border-collapse: collapse; }
+                .total { margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; font-weight: bold; display: flex; justify-content: space-between; font-size: 16px; }
+                .footer { text-align: center; font-size: 11px; margin-top: 20px; }
+            </style></head>
+            <body>
+                <div class="header">
+                    <h2 style="margin:0;">إيصال مرتجع</h2>
+                    <p style="margin:5px 0;">شركة الزيادى</p>
+                    <small>${ret.date || ret.time}</small>
+                </div>
+                <p style="font-size:14px;"><b>العميل:</b> ${ret.customerName}</p>
+                <table>
+                    <thead><tr style="border-bottom: 1px solid #000;"><th>الصنف</th><th>ك</th><th>ج.م</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="total"><span>إجمالي المرتجع:</span><span>${ret.totalAmount || ret.total} ج.م</span></div>
+                <div class="footer">تم خصم المبلغ من مديونية العميل<br>شركة الزيادى لقطع الغيار</div>
+            </body></html>`;
+
+        pri.document.open();
+        pri.document.write(printContent);
+        pri.document.close();
+        setTimeout(() => { pri.focus(); pri.print(); }, 500);
+    };
+
+    window.deleteReturnRecord = async (id) => {
+        if(!confirm("هل تريد حذف سجل المرتجع؟ (تنبيه: هذا لن يؤثر على المخزن أو الحسابات، سيحذف السجل فقط)")) return;
+        await deleteDoc(doc(db, "returns", id));
+        loadReturns();
+    };
+
+    loadReturns();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أقساط المورد - شركة الزيادي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-purple: #bc8cff; --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-red: #f85149; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 30px; }
+        
+        .glass-card {
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 20px; backdrop-filter: blur(15px); margin-bottom: 20px;
+        }
+
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); margin-bottom: 20px; }
+        .btn-add { background: var(--neon-purple); color: #fff; border: none; border-radius: 12px; padding: 10px 20px; font-weight: 600; width: 100%; transition: 0.3s; }
+        .btn-add:hover { background: #a56dff; transform: translateY(-2px); }
+        
+        .installment-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .installment-item:last-child { border-bottom: none; }
+        .inst-date { font-size: 0.8rem; opacity: 0.6; }
+        .inst-amount { font-weight: 700; color: var(--neon-blue); }
+        .status-paid { color: var(--neon-green); font-size: 0.8rem; font-weight: bold; }
+
+        input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 10px !important; }
+        .c-red { color: var(--neon-red); }
+        .c-green { color: var(--neon-green); }
+    </style>
+</head>
+<body>
+
+<div class="header-nav">
+    <a href="#" id="backBtn" class="text-white"><i class="fas fa-arrow-right"></i></a>
+    <h5 class="m-0 fw-bold">جدولة الأقساط</h5>
+    <i class="fas fa-file-invoice-dollar c-purple"></i>
+</div>
+
+<div class="container">
+    <div class="glass-card text-center">
+        <h6 id="supName">جاري التحميل...</h6>
+        <div class="display-6 fw-bold" id="supBalance">0</div>
+        <small id="debtStatusLabel" class="opacity-50">صافي المديونية اللحظي</small>
+    </div>
+
+    <div class="glass-card">
+        <h6 class="mb-3"><i class="fas fa-plus-circle me-2"></i> إضافة قسط جديد</h6>
+        <div class="row g-2">
+            <div class="col-6">
+                <input type="number" id="instAmount" class="form-control" placeholder="المبلغ">
+            </div>
+            <div class="col-6">
+                <input type="date" id="instDate" class="form-control">
+            </div>
+            <div class="col-12 mt-3">
+                <button class="btn-add" onclick="addInstallment()">حفظ القسط</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <h6 class="mb-3">جدول الأقساط القادمة</h6>
+        <div id="installmentsList">
+             <p class="text-center opacity-50 py-3">جاري جلب البيانات...</p>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const supId = urlParams.get('id');
+
+    // دالة الحساب الدقيق (نفس منطق صفحة مديونيات الموردين)
+    async function getRealBalance(supId, openingBal) {
+        const [snapTrans, snapItems] = await Promise.all([
+            getDocs(query(collection(db, "transactions"), where("partyId", "==", supId))),
+            getDocs(query(collection(db, "supplier_transactions"), where("supplierId", "==", supId)))
+        ]);
+
+        let debt = 0;   // مبالغ علينا (مشتريات/قبض)
+        let credit = 0; // مبالغ سددناها (صرف/مرتجع)
+
+        snapTrans.forEach(doc => {
+            const d = doc.data();
+            const amt = Number(d.amount) || 0;
+            if (d.type === "صرف") credit += amt;
+            else if (d.type === "قبض") debt += amt;
+        });
+
+        snapItems.forEach(doc => {
+            const d = doc.data();
+            // استخدام d.total أو d.amount حسب المتوفر
+            const amt = Number(d.total) || Number(d.amount) || 0;
+            if (d.type === "شراء" || d.type === "فاتورة شراء") debt += amt;
+            else if (d.type === "مرتجع شراء") credit += amt;
+        });
+
+        // المعادلة: (الافتتاحي + الدين) - اللي سددناه
+        return (Number(openingBal || 0) + debt) - credit;
+    }
+
+    async function loadData() {
+        if(!supId) return;
+        document.getElementById('backBtn').href = `supplier-details.html?id=${supId}`;
+
+        try {
+            const supDoc = await getDoc(doc(db, "suppliers", supId));
+            
+            if(supDoc.exists()) {
+                const data = supDoc.data();
+                document.getElementById('supName').innerText = data.name;
+                
+                // حساب المديونية الفعلية باستخدام Opening Balance
+                const realBalance = await getRealBalance(supId, data.openingBalance);
+                
+                const balanceEl = document.getElementById('supBalance');
+                balanceEl.innerText = Math.abs(realBalance).toLocaleString() + " ج.م";
+                balanceEl.className = `display-6 fw-bold ${realBalance >= 0 ? 'c-red' : 'c-green'}`;
+                
+                document.getElementById('debtStatusLabel').innerText = realBalance >= 0 ? "صافي مديونية علينا للمورد" : "صافي رصيد لنا عند المورد";
+            }
+
+            const q = query(collection(db, "installments"), where("partyId", "==", supId));
+            const querySnapshot = await getDocs(q);
+            const listDiv = document.getElementById('installmentsList');
+            
+            if (querySnapshot.empty) {
+                listDiv.innerHTML = '<p class="text-center opacity-50 py-3">لا توجد أقساط مجدولة</p>';
+                return;
+            }
+
+            let installments = [];
+            querySnapshot.forEach(docSnap => {
+                installments.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            installments.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+            listDiv.innerHTML = "";
+            installments.forEach((inst) => {
+                const html = `
+                    <div class="installment-item">
+                        <div>
+                            <div class="inst-amount">${Number(inst.amount).toLocaleString()} ج.م</div>
+                            <div class="inst-date">تاريخ الاستحقاق: ${inst.dueDate}</div>
+                        </div>
+                        <div>
+                            ${inst.status === 'paid' 
+                                ? '<span class="status-paid"><i class="fas fa-check-circle"></i> تم السداد</span>' 
+                                : `<button class="btn btn-sm btn-success px-3" onclick="payInstallment('${inst.id}', ${inst.amount})">تسديد الآن</button>`}
+                        </div>
+                    </div>
+                `;
+                listDiv.innerHTML += html;
+            });
+        } catch (e) {
+            console.error(e);
+            document.getElementById('installmentsList').innerHTML = '<p class="text-center text-danger py-3">فشل في تحميل البيانات</p>';
+        }
+    }
+
+    window.addInstallment = async () => {
+        const amount = document.getElementById('instAmount').value;
+        const dueDate = document.getElementById('instDate').value;
+        if(!amount || !dueDate) return alert("يرجى إدخال المبلغ والتاريخ");
+
+        try {
+            await addDoc(collection(db, "installments"), {
+                partyId: supId,
+                amount: Number(amount),
+                dueDate: dueDate,
+                status: 'pending',
+                createdAt: serverTimestamp()
+            });
+            location.reload();
+        } catch (e) { alert("حدث خطأ أثناء الحفظ"); }
+    };
+
+    window.payInstallment = async (instId, amount) => {
+        if(confirm(`تأكيد دفع قسط بقيمة ${amount} ج.م؟`)) {
+            try {
+                await updateDoc(doc(db, "installments", instId), { status: 'paid' });
+                await addDoc(collection(db, "transactions"), {
+                    partyId: supId,
+                    amount: Number(amount),
+                    type: "صرف",
+                    note: "سداد قسط مجدول",
+                    date: new Date().toISOString().split('T')[0],
+                    createdAt: serverTimestamp()
+                });
+                alert("تم السداد بنجاح");
+                location.reload();
+            } catch (e) { alert("حدث خطأ أثناء السداد"); }
+        }
+    };
+
+    loadData();
+</script>
+</body>
+</html>

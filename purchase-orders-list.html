@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الطلبيات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-yellow: #f1e05a; --neon-green: #3fb950; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 30px; }
+        .header-section { padding: 20px; background: var(--glass); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .order-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 15px; margin-bottom: 15px; transition: 0.3s; }
+        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; }
+        .status-pending { background: rgba(241, 224, 90, 0.1); color: var(--neon-yellow); }
+        .status-received { background: rgba(63, 185, 80, 0.1); color: var(--neon-green); }
+        .btn-action { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 8px; font-size: 0.8rem; flex: 1; margin: 0 2px; }
+        .btn-receive { background: var(--neon-green); color: #fff; border: none; }
+        .filter-btn.active { background-color: var(--neon-blue) !important; color: white !important; }
+    </style>
+</head>
+<body>
+
+<div class="header-section">
+    <a href="purchase-mgmt.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
+    <h5 class="m-0 fw-bold">طلبيات الشراء</h5>
+    <a href="new-order.html" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> طلبية جديدة</a>
+</div>
+
+<div class="container">
+    <div class="d-flex gap-2 mb-4">
+        <button class="btn btn-sm btn-outline-light flex-grow-1 filter-btn active" id="btn-all" onclick="filterOrders('all')">الكل</button>
+        <button class="btn btn-sm btn-outline-warning flex-grow-1 filter-btn" id="btn-pending" onclick="filterOrders('pending')">تحت التنفيذ</button>
+        <button class="btn btn-sm btn-outline-success flex-grow-1 filter-btn" id="btn-received" onclick="filterOrders('received')">تم الاستلام</button>
+    </div>
+
+    <div id="ordersList">
+        <div class="text-center mt-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let allOrdersData = []; // هنخزن هنا كل الطلبيات عشان نفلترها بسرعة
+
+    async function loadInitialData() {
+        const listDiv = document.getElementById('ordersList');
+        try {
+            // سحب كل الطلبيات بدون فلترة (عشان نتجنب مشكلة الـ Index)
+            const snap = await getDocs(collection(db, "purchase_orders"));
+            const orders = [];
+            
+            for (const d of snap.docs) {
+                const data = d.data();
+                // جلب اسم المورد
+                const supDoc = await getDoc(doc(db, "suppliers", data.supplierId));
+                orders.push({
+                    id: d.id,
+                    ...data,
+                    supName: supDoc.exists() ? supDoc.data().name : "مورد غير معروف",
+                    // تحويل التايم ستامب لرقم عشان الترتيب
+                    sortTime: data.createdAt ? data.createdAt.toMillis() : 0
+                });
+            }
+
+            // ترتيب من الأحدث للأقدم
+            allOrdersData = orders.sort((a, b) => b.sortTime - a.sortTime);
+            renderOrders(allOrdersData);
+        } catch (e) {
+            console.error(e);
+            listDiv.innerHTML = '<div class="text-danger text-center">حدث خطأ أثناء تحميل البيانات</div>';
+        }
+    }
+
+    function renderOrders(orders) {
+        const listDiv = document.getElementById('ordersList');
+        listDiv.innerHTML = "";
+
+        if (orders.length === 0) {
+            listDiv.innerHTML = '<div class="text-center opacity-50 mt-5">لا توجد طلبيات لعرضها</div>';
+            return;
+        }
+
+        orders.forEach(order => {
+            const html = `
+                <div class="order-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="m-0 fw-bold">${order.supName}</h6>
+                            <small class="opacity-50">${order.date || ''}</small>
+                        </div>
+                        <span class="status-badge ${order.status === 'pending' ? 'status-pending' : 'status-received'}">
+                            ${order.status === 'pending' ? 'تحت التنفيذ' : 'تم الاستلام'}
+                        </span>
+                    </div>
+                    <div class="my-3 small">
+                        ${order.items.map(item => `<div>• ${item.name} (${item.qty})</div>`).join('')}
+                    </div>
+                    <div class="d-flex mt-3">
+                        <button class="btn-action" onclick="shareWhatsApp('${order.id}')">
+                            <i class="fab fa-whatsapp text-success"></i> واتساب
+                        </button>
+                        ${order.status === 'pending' ? `
+                            <button class="btn-action btn-receive" onclick="convertToInvoice('${order.id}')">
+                                <i class="fas fa-check"></i> استلام البضاعة
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>`;
+            listDiv.innerHTML += html;
+        });
+    }
+
+    window.filterOrders = (status) => {
+        // تحديث شكل الزراير
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + status).classList.add('active');
+
+        if (status === 'all') {
+            renderOrders(allOrdersData);
+        } else {
+            const filtered = allOrdersData.filter(o => o.status === status);
+            renderOrders(filtered);
+        }
+    };
+
+    window.shareWhatsApp = async (orderId) => {
+        const order = allOrdersData.find(o => o.id === orderId);
+        const supDoc = await getDoc(doc(db, "suppliers", order.supplierId));
+        let phone = supDoc.exists() ? supDoc.data().phone : "";
+        
+        let text = `*طلبية شراء من شركة الزيادى*\n`;
+        order.items.forEach(i => text += `- ${i.name} (${i.qty})\n`);
+        
+        // تنظيف الرقم لمصر
+        phone = phone.replace(/\s+/g, '').replace('+', '');
+        if (phone.startsWith('01')) phone = '2' + phone;
+
+        window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`);
+    };
+
+    window.convertToInvoice = (orderId) => {
+        window.location.href = `new-purchase-invoice.html?orderId=${orderId}`;
+    };
+
+    loadInitialData();
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استيراد بيانات شاملة - Warchat Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --bg-dark: #0d1117; --glass: rgba(255,255,255,0.05); --neon: #58a6ff; }
+        body { background: var(--bg-dark); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding: 10px; }
+        
+        .import-card { 
+            background: var(--glass); 
+            border: 2px dashed rgba(88, 166, 255, 0.3); 
+            border-radius: 20px; 
+            padding: 40px; 
+            text-align: center;
+            transition: 0.3s;
+        }
+        .import-card:hover { border-color: var(--neon); background: rgba(88, 166, 255, 0.05); }
+        
+        .preview-container {
+            background: var(--glass);
+            border-radius: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .table { color: white !important; font-size: 0.75rem; white-space: nowrap; }
+        .loading-overlay { display: none; color: var(--neon); }
+        .instruction-box { background: rgba(242, 202, 48, 0.1); border: 1px solid #f2ca30; border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0 text-white"><i class="fas fa-file-excel me-2 text-success"></i> استيراد الأصناف</h4>
+        <a href="inventory-menu.html" class="btn btn-outline-light btn-sm">رجوع</a>
+    </div>
+
+    <div class="instruction-box">
+        <strong><i class="fas fa-lightbulb me-1"></i> ملاحظة :</strong>
+        تأكد أن ملف الإكسيل يحتوي على الأعمدة التالية (الاسم، الفئة، الباركود، الكمية، حد الطلب، سعر الشراء، سعر البيع 1، سعر البيع 2، سعر البيع 3، اسم الوحدة، المعامل).
+    </div>
+
+    <div class="import-card" id="dropZone">
+        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-info"></i>
+        <h5>ارفع ملف الإكسيل</h5>
+        <input type="file" id="fileInput" accept=".xlsx, .xls" class="d-none">
+        <button class="btn btn-info px-5 mt-2" onclick="document.getElementById('fileInput').click()">اختيار الملف</button>
+    </div>
+
+    <div id="loading" class="text-center mt-3 loading-overlay">
+        <div class="spinner-border spinner-border-sm"></div> جارٍ قراءة الملف وتحليل البيانات...
+    </div>
+
+    <div id="previewArea" style="display: none;">
+        <div class="preview-container">
+            <table class="table table-sm table-dark table-hover m-0 text-center">
+                <thead id="tableHead" class="table-secondary text-dark"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-success w-100 mt-3 p-3 fw-bold" onclick="uploadToFirebase()">
+            <i class="fas fa-cloud-upload-alt me-2"></i> اعتماد ورفع (<span id="countDisplay">0</span> صنف) إلى السحابة
+        </button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, writeBatch, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let jsonData = [];
+
+    document.getElementById('fileInput').addEventListener('change', handleFile);
+
+    function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById('loading').style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const data = evt.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            jsonData = XLSX.utils.sheet_to_json(sheet);
+            displayPreview(jsonData);
+            document.getElementById('loading').style.display = 'none';
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    function displayPreview(data) {
+        if (data.length === 0) return;
+        const head = document.getElementById('tableHead');
+        const body = document.getElementById('tableBody');
+        head.innerHTML = ''; body.innerHTML = '';
+        const keys = Object.keys(data[0]);
+        let headRow = '<tr>';
+        keys.forEach(k => headRow += `<th>${k}</th>`);
+        head.innerHTML = headRow + '</tr>';
+        data.slice(0, 8).forEach(row => {
+            let bodyRow = '<tr>';
+            keys.forEach(k => bodyRow += `<td>${row[k] || ''}</td>`);
+            body.innerHTML += bodyRow + '</tr>';
+        });
+        document.getElementById('previewArea').style.display = 'block';
+        document.getElementById('countDisplay').innerText = data.length;
+    }
+
+    window.uploadToFirebase = async function() {
+        if (!confirm(`هل تريد رفع ${jsonData.length} صنف ببياناتهم الكاملة؟`)) return;
+        
+        const batch = writeBatch(db);
+        const collectionRef = collection(db, "inventory");
+
+        jsonData.forEach((item) => {
+            const newDoc = doc(collectionRef);
+            // جلب البيانات مع دعم التسمية بالعربي والإنجليزي
+            batch.set(newDoc, {
+                name: item["الاسم"] || item["name"] || "غير مسمى",
+                category: item["الفئة"] || item["category"] || "عام",
+                barcode: String(item["الباركود"] || item["barcode"] || ""),
+                qty: parseFloat(item["الكمية"] || item["qty"]) || 0,
+                min: parseFloat(item["حد الطلب"] || item["min"]) || 3,
+                buy: parseFloat(item["سعر الشراء"] || item["buy"]) || 0,
+                sell: parseFloat(item["سعر البيع 1"] || item["sell"]) || 0,
+                sell2: parseFloat(item["سعر البيع 2"] || item["sell2"]) || 0,
+                sell3: parseFloat(item["سعر البيع 3"] || item["sell3"]) || 0,
+                unitName: item["اسم الوحدة"] || item["unitName"] || "قطعة",
+                unitFactor: parseInt(item["المعامل"] || item["unitFactor"]) || 1,
+                timestamp: serverTimestamp(),
+                lastUpdate: serverTimestamp()
+            });
+        });
+
+        try {
+            await batch.commit();
+            alert("تم بنجاح! تم استيراد 100% من البيانات.");
+            window.location.href = "inventory-list.html";
+        } catch (e) {
+            console.error(e);
+            alert("فشل الرفع، تأكد من اتصال الإنترنت");
+        }
+    }
+</script>
+</body>
+</html>

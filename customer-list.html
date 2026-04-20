@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة العملاء - الزيادي Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-red: #f85149; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; }
+        .header-section { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+        .search-box { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 10px 15px; display: flex; align-items: center; margin: 15px 0; }
+        .search-box input { background: transparent; border: none; color: #fff; width: 100%; margin-right: 10px; outline: none; }
+        .customer-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 18px; margin-bottom: 15px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid transparent; }
+        .customer-card.has-debt { border-right-color: var(--neon-red); }
+        .customer-card.is-clear { border-right-color: var(--neon-green); }
+        .customer-name { color: #fff; font-weight: 700; font-size: 1.05rem; margin: 0; }
+        .balance-label { font-size: 0.7rem; opacity: 0.5; display: block; margin-bottom: 2px; }
+        .balance-value { font-weight: 700; font-size: 0.95rem; }
+        .text-debt { color: var(--neon-red); }
+        .text-clear { color: var(--neon-green); }
+        .action-container { display: flex; gap: 8px; }
+        .action-btn { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.2s; font-size: 1rem; }
+        .btn-pay { background: rgba(63, 185, 80, 0.1); color: var(--neon-green); border: 1px solid rgba(63, 185, 80, 0.2); }
+        .btn-info { background: rgba(88, 166, 255, 0.1); color: var(--neon-blue); border: 1px solid rgba(88, 166, 255, 0.2); }
+        .phone-sub { font-size: 0.75rem; opacity: 0.6; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="header-section">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="customer-add.html" class="text-white"><i class="fas fa-chevron-right"></i></a>
+        <h5 class="m-0 fw-bold">قائمة العملاء</h5>
+        <div style="width: 24px;"></div>
+    </div>
+    <div class="container">
+        <div class="search-box">
+            <i class="fas fa-search opacity-50"></i>
+            <input type="text" id="searchInput" placeholder="ابحث بالإسم أو رقم الهاتف..." oninput="filterCustomers()">
+        </div>
+    </div>
+</div>
+
+<div class="container py-3" id="customersContainer">
+    <div class="text-center py-5 opacity-50 text-info">جاري تجميع مديونيات العملاء بدقة...</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, orderBy, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allCustomers = [];
+
+    // الوظيفة المعدلة: دلوقتى بتاخد customerId وكمان الـ initialBalance
+    async function getRealDebt(customerId, initialBalance = 0) {
+        try {
+            // 1. حساب مديونية الفواتير المتبقية
+            const qInvoices = query(collection(db, "invoices"), where("customerId", "==", customerId));
+            const snapInvoices = await getDocs(qInvoices);
+            let invoiceDebt = 0;
+            snapInvoices.forEach(doc => {
+                invoiceDebt += (Number(doc.data().remaining) || 0);
+            });
+
+            // 2. حساب أثر السندات (القبض يقلل والصرف يزيد)
+            const qTrans = query(collection(db, "transactions"), where("partyId", "==", customerId));
+            const snapTrans = await getDocs(qTrans);
+            let transEffect = 0;
+            snapTrans.forEach(doc => {
+                const tr = doc.data();
+                if(tr.type === 'قبض') transEffect -= (Number(tr.amount) || 0);
+                else if(tr.type === 'صرف') transEffect += (Number(tr.amount) || 0);
+            });
+
+            // النتيجة النهائية هي مجموع (الرصيد الافتتاحي + ديون الفواتير + تأثير السندات)
+            return Number(initialBalance) + invoiceDebt + transEffect;
+        } catch (e) {
+            console.error("Error calculating debt for " + customerId, e);
+            return Number(initialBalance);
+        }
+    }
+
+    async function loadCustomers() {
+        const container = document.getElementById('customersContainer');
+        try {
+            const q = query(collection(db, "customers"), orderBy("name"));
+            const snap = await getDocs(q);
+            
+            const customerPromises = snap.docs.map(async (doc) => {
+                const data = doc.data();
+                // هنا بنسحب الـ initialBalance من الداتا بيز ونبعته للحسبة
+                const debt = await getRealDebt(doc.id, data.initialBalance || 0);
+                return {
+                    id: doc.id,
+                    ...data,
+                    realBalance: debt
+                };
+            });
+
+            allCustomers = await Promise.all(customerPromises);
+            renderCustomers(allCustomers);
+        } catch (e) {
+            container.innerHTML = `<div class="text-danger text-center">خطأ في جلب البيانات: ${e.message}</div>`;
+        }
+    }
+
+    window.renderCustomers = (list) => {
+        const container = document.getElementById('customersContainer');
+        if(list.length === 0) {
+            container.innerHTML = `<div class="text-center py-5 opacity-50">لا يوجد نتائج</div>`;
+            return;
+        }
+
+        container.innerHTML = list.map(cust => {
+            const balance = cust.realBalance || 0;
+            const hasDebt = balance > 0;
+            const isCredit = balance < 0; // لو العميل له فلوس
+
+            return `
+                <div class="customer-card ${balance > 0 ? 'has-debt' : 'is-clear'}">
+                    <div class="customer-main">
+                        <h6 class="customer-name">${cust.name}</h6>
+                        <small class="phone-sub"><i class="fas fa-phone-alt fa-xs opacity-50 me-1"></i> ${cust.phone || 'بدون هاتف'}</small>
+                        <div class="mt-2">
+                            <span class="balance-label">صافي الحساب الحالي</span>
+                            <span class="balance-value ${balance > 0 ? 'text-debt' : 'text-clear'}">
+                                ${Math.abs(balance).toLocaleString(undefined, {minimumFractionDigits: 2})} ج.م
+                                <small style="font-size: 0.6rem;">(${balance > 0 ? 'عليه' : balance < 0 ? 'له' : 'خالص'})</small>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="action-container">
+                        <a href="customer-details.html?id=${cust.id}" class="action-btn btn-info" title="كشف حساب">
+                            <i class="fas fa-file-invoice"></i>
+                        </a>
+                        <a href="customer-payment.html?id=${cust.id}" class="action-btn btn-pay" title="تحصيل مالي">
+                            <i class="fas fa-hand-holding-dollar"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.filterCustomers = () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allCustomers.filter(c => 
+            (c.name && c.name.toLowerCase().includes(term)) || 
+            (c.phone && c.phone.includes(term))
+        );
+        renderCustomers(filtered);
+    }
+
+    loadCustomers();
+</script>
+</body>
+</html>

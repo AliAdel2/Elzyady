@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل بيانات العميل - Masar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-orange: #f0883e; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 40px; }
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .edit-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 25px; backdrop-filter: blur(15px); }
+        .form-label { font-size: 0.85rem; margin-bottom: 6px; color: var(--neon-blue); font-weight: 600; }
+        .form-control { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 12px; margin-bottom: 18px; }
+        .form-control:focus { background: rgba(255,255,255,0.08); border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 10px rgba(88, 166, 255, 0.2); }
+        .form-control:disabled { background: rgba(0,0,0,0.3); color: var(--neon-orange); opacity: 1; border: 1px dashed rgba(255,255,255,0.2); font-weight: bold; }
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-save { background: linear-gradient(45deg, #007bff, #00d4ff); border: none; border-radius: 15px; padding: 14px; font-weight: 700; width: 100%; margin-top: 15px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .section-title { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loading-overlay">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-2"></div>
+        <div class="small">جاري مراجعة الفواتير وسجلات العمليات...</div>
+    </div>
+</div>
+
+<div class="header-nav">
+    <a href="javascript:history.back()" class="text-white"><i class="fas fa-chevron-right"></i></a>
+    <h5 class="m-0 fw-bold">تعديل بيانات العميل</h5>
+    <div style="width: 20px;"></div>
+</div>
+
+<div class="container">
+    <div class="edit-card">
+        <form id="editForm">
+            <div class="section-title">المعلومات الأساسية</div>
+            <label class="form-label">اسم العميل</label>
+            <input type="text" id="custName" class="form-control" required>
+
+            <label class="form-label">رقم الهاتف</label>
+            <input type="tel" id="custPhone" class="form-control">
+
+            <div class="section-title">الموقف المالي الفعلي</div>
+            <label class="form-label"><i class="fas fa-calculator me-1"></i> الرصيد الحالي (صافي المديونية)</label>
+            <input type="text" id="custBalance" class="form-control" disabled>
+            <div id="calcDetails" class="small opacity-50 mb-3 mt-n2 px-2" style="font-size: 0.7rem;">
+                جاري تحليل العمليات...
+            </div>
+
+            <div class="row-grid">
+                <div>
+                    <label class="form-label">رصيد افتتاحي</label>
+                    <input type="number" id="custOpening" class="form-control" step="0.01">
+                </div>
+                <div>
+                    <label class="form-label">حد المديونية</label>
+                    <input type="number" id="custLimit" class="form-control" step="0.01">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-save">حفظ التعديلات</button>
+        </form>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const urlParams = new URLSearchParams(window.location.search);
+    const custId = urlParams.get('id');
+
+    async function loadAndCalculate() {
+        if(!custId) return;
+
+        try {
+            const docSnap = await getDoc(doc(db, "customers", custId));
+            if (!docSnap.exists()) return;
+            const data = docSnap.data();
+            
+            // 2. جلب الفواتير (نجمع الـ remaining عشان نحسب المديونية الحالية)
+            const qInv = query(collection(db, "invoices"), where("customerId", "==", custId));
+            const invSnap = await getDocs(qInv);
+            let totalRemainingInvoices = 0;
+            invSnap.forEach(d => totalRemainingInvoices += (Number(d.data().remaining) || 0));
+
+            // 3. تحليل السندات
+            const qTrans = query(
+                collection(db, "transactions"), 
+                where("partyId", "==", custId)
+            );
+            const transSnap = await getDocs(qTrans);
+            
+            let transEffect = 0;
+            transSnap.forEach(d => {
+                const trans = d.data();
+                const amount = Number(trans.amount) || 0;
+                if (trans.type === "قبض") transEffect -= amount;
+                else if (trans.type === "صرف") transEffect += amount;
+            });
+
+            // 4. الحسبة النهائية: (افتتاحي + باقي الفواتير + اثر السندات)
+            const startBal = Number(data.initialBalance || 0);
+            const actualBalance = startBal + totalRemainingInvoices + transEffect;
+
+            // تحديث الواجهة
+            document.getElementById('custName').value = data.name || '';
+            document.getElementById('custPhone').value = data.phone || '';
+            document.getElementById('custOpening').value = startBal;
+            document.getElementById('custLimit').value = data.creditLimit || 0;
+            
+            document.getElementById('custBalance').value = actualBalance.toLocaleString() + " ج.م";
+            document.getElementById('calcDetails').innerHTML = 
+                `الحسبة: (${startBal.toLocaleString()} افتتاحي) + (${totalRemainingInvoices.toLocaleString()} باقي فواتير) + (${transEffect.toLocaleString()} سندات)`;
+
+            document.getElementById('loader').style.display = 'none';
+        } catch (error) {
+            console.error("خطأ:", error);
+            document.getElementById('loader').innerHTML = `<div class="text-danger p-3">فشل في مزامنة البيانات المالية</div>`;
+        }
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'جاري الحفظ...';
+
+        try {
+            const newOpening = Number(document.getElementById('custOpening').value);
+            
+            await updateDoc(doc(db, "customers", custId), {
+                name: document.getElementById('custName').value.trim(),
+                phone: document.getElementById('custPhone').value.trim(),
+                initialBalance: newOpening, // حفظ كـ initialBalance
+                creditLimit: Number(document.getElementById('custLimit').value)
+            });
+            
+            alert("تم التحديث بنجاح");
+            window.location.href = `customer-details.html?id=${custId}`;
+        } catch (error) {
+            alert("فشل في حفظ التعديلات");
+            btn.disabled = false;
+            btn.innerHTML = 'حفظ التعديلات';
+        }
+    });
+
+    loadAndCalculate();
+</script>
+</body>
+</html>

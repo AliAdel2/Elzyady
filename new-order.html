@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلبية شراء جديدة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-purple: #bc8cff; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 100px; }
+        .glass-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; backdrop-filter: blur(15px); margin-bottom: 20px; }
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); sticky; top: 0; z-index: 100; }
+        .order-item { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-right: 4px solid var(--neon-blue); position: relative; }
+        input, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 10px !important; margin-bottom: 10px; }
+        input:focus { border-color: var(--neon-blue) !important; box-shadow: none !important; }
+        .btn-add-item { border: 1px dashed var(--neon-blue); color: var(--neon-blue); background: none; width: 100%; padding: 10px; border-radius: 12px; transition: 0.3s; }
+        .btn-add-item:hover { background: rgba(88, 166, 255, 0.1); }
+        .btn-save { background: var(--neon-purple); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(188, 140, 255, 0.3); }
+    </style>
+</head>
+<body>
+
+<datalist id="inventoryList"></datalist>
+
+<div class="header-nav">
+    <a href="purchase-orders-list.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
+    <h5 class="m-0 fw-bold" id="pageTitle">عمل طلبية شراء</h5>
+    <span id="statusLabel" class="badge bg-primary">جديدة</span>
+</div>
+
+<div class="container">
+    <div class="glass-card">
+        <label class="mb-2 small opacity-50 text-white">اختر المورد</label>
+        <select id="supplierSelect" class="form-select">
+            <option value="">اختر من القائمة...</option>
+        </select>
+        <label class="mb-2 small opacity-50 text-white">ملاحظات إضافية</label>
+        <input type="text" id="orderNote" class="form-control" placeholder="مثال: يرجى سرعة التوريد...">
+    </div>
+
+    <div class="glass-card">
+        <h6 class="mb-3"><i class="fas fa-list me-2 text-info"></i>أصناف الطلبية</h6>
+        <div id="itemsContainer"></div>
+        <button class="btn-add-item mt-2" onclick="addNewRow()">
+            <i class="fas fa-plus-circle me-1"></i> إضافة صنف للطلبية
+        </button>
+    </div>
+
+    <div class="fixed-bottom p-3" style="background: rgba(13,17,23,0.9); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1);">
+        <button class="btn-save" id="btnSave" onclick="saveOrder()">حفظ وإرسال الطلبية</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // كشف وضع التعديل من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+
+    async function initPage() {
+        try {
+            // 1. تحميل الموردين
+            const supSnap = await getDocs(collection(db, "suppliers"));
+            const select = document.getElementById('supplierSelect');
+            supSnap.forEach(doc => select.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`);
+
+            // 2. تحميل الأصناف من المخزن للـ Datalist
+            const datalist = document.getElementById('inventoryList');
+            const invSnap = await getDocs(collection(db, "inventory"));
+            let options = "";
+            invSnap.forEach(doc => {
+                const data = doc.data();
+                const itemName = data.name || data.itemName;
+                if(itemName) options += `<option value="${itemName}">`;
+            });
+            datalist.innerHTML = options;
+
+            // 3. التحقق إذا كان الوضع تعديل
+            if (editId) {
+                await loadOrderData();
+            } else {
+                addNewRow();
+            }
+        } catch (e) {
+            console.error("Error during initialization:", e);
+        }
+    }
+
+    async function loadOrderData() {
+        document.getElementById('pageTitle').innerText = "تعديل طلبية شراء";
+        document.getElementById('statusLabel').innerText = "تعديل";
+        document.getElementById('statusLabel').className = "badge bg-warning text-dark";
+        document.getElementById('btnSave').innerText = "تحديث الطلبية";
+
+        const orderRef = doc(db, "purchase_orders", editId);
+        const snap = await getDoc(orderRef);
+
+        if (snap.exists()) {
+            const data = snap.data();
+            document.getElementById('supplierSelect').value = data.supplierId;
+            document.getElementById('orderNote').value = data.note || "";
+            
+            // إضافة الأصناف المسجلة
+            data.items.forEach(item => {
+                addNewRow(item);
+            });
+        }
+    }
+
+    window.addNewRow = (item = null) => {
+        const container = document.getElementById('itemsContainer');
+        const rowId = Date.now() + Math.random();
+        const html = `
+            <div class="order-item" id="row_${rowId}">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small opacity-50">بيانات الصنف</span>
+                    <i class="fas fa-trash-alt text-danger" onclick="document.getElementById('row_${rowId}').remove()"></i>
+                </div>
+                <input type="text" class="form-control item-name" list="inventoryList" 
+                       value="${item ? item.name : ''}" placeholder="اسم الصنف...">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="small opacity-50">الكمية</label>
+                        <input type="number" class="form-control item-qty" value="${item ? item.qty : ''}" placeholder="0">
+                    </div>
+                    <div class="col-6">
+                        <label class="small opacity-50">السعر المتوقع</label>
+                        <input type="number" class="form-control item-price" value="${item ? (item.price || '') : ''}" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    };
+
+    window.saveOrder = async () => {
+        const btn = document.getElementById('btnSave');
+        const supId = document.getElementById('supplierSelect').value;
+        const note = document.getElementById('orderNote').value;
+        const rows = document.querySelectorAll('.order-item');
+
+        if(!supId || rows.length === 0) return alert("برجاء اختيار المورد وإضافة أصناف");
+
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ...";
+
+        const items = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.item-name').value;
+            const qty = row.querySelector('.item-qty').value;
+            const price = row.querySelector('.item-price').value;
+            if(name && qty) {
+                items.push({ 
+                    name, 
+                    qty: Number(qty), 
+                    price: Number(price || 0) 
+                });
+            }
+        });
+
+        try {
+            const orderData = {
+                supplierId: supId,
+                items,
+                note,
+                updatedAt: serverTimestamp(),
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            if (editId) {
+                await updateDoc(doc(db, "purchase_orders", editId), orderData);
+                alert("تم تحديث الطلبية ✅");
+            } else {
+                orderData.status = "pending";
+                orderData.createdAt = serverTimestamp();
+                await addDoc(collection(db, "purchase_orders"), orderData);
+                alert("تم إرسال الطلبية بنجاح ✅");
+            }
+            
+            window.location.href = "purchase-orders-list.html";
+        } catch (e) {
+            console.error(e);
+            alert("حدث خطأ أثناء الحفظ");
+            btn.disabled = false;
+            btn.innerText = editId ? "تحديث الطلبية" : "حفظ وإرسال الطلبية";
+        }
+    };
+
+    initPage();
+</script>
+</body>
+</html>

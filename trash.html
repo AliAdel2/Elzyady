@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سلة المحذوفات الذكية - Warchat Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --bg-dark: #0b0e14; 
+            --glass: rgba(255, 255, 255, 0.03); 
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --neon-blue: #58a6ff;
+            --neon-red: #ff7b72;
+            --neon-green: #3fb950;
+            --text-muted: #8b949e;
+        }
+
+        body { 
+            background: var(--bg-dark); 
+            font-family: 'Cairo', sans-serif; 
+            color: #ffffff; 
+            padding-bottom: 50px;
+            background-image: radial-gradient(circle at 50% -20%, #161b22 0%, var(--bg-dark) 80%);
+        }
+
+        /* الهيدر العائم */
+        .header-floating {
+            background: rgba(13, 17, 23, 0.7);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .trash-badge {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--neon-red);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        /* كروت المنتجات المطورة */
+        .trash-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .trash-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(248, 81, 73, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .trash-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; width: 4px; height: 100%;
+            background: var(--neon-red);
+            opacity: 0.5;
+        }
+
+        .item-main-info h6 { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin-bottom: 5px;
+            color: #f0f6fc;
+        }
+
+        .detail-tag {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        /* الأزرار */
+        .btn-action {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+        }
+
+        .btn-restore-v2 {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--neon-green);
+        }
+        .btn-restore-v2:hover { background: var(--neon-green); color: #000; transform: rotate(-15deg); }
+
+        .btn-delete-v2 {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--neon-red);
+        }
+        .btn-delete-v2:hover { background: var(--neon-red); color: #fff; transform: scale(1.1); }
+
+        .empty-state {
+            padding: 80px 20px;
+            text-align: center;
+            background: var(--glass);
+            border-radius: 30px;
+            border: 2px dashed var(--glass-border);
+            margin-top: 30px;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            background: linear-gradient(45deg, var(--neon-red), #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-floating">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="ms-3">
+                <h5 class="m-0 fw-bold">سلة المحذوفات</h5>
+                <span class="trash-badge mt-1 d-inline-block">
+                    <i class="fas fa-archive me-1"></i> الأرشيف المؤقت
+                </span>
+            </div>
+        </div>
+        <a href="inventory-list.html" class="btn btn-outline-light btn-sm px-4" style="border-radius: 10px;">
+            <i class="fas fa-chevron-right ms-1"></i> رجوع للجرد
+        </a>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div id="trashContainer">
+        </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function listenToTrash() {
+        const q = query(collection(db, "inventory"), where("isDeleted", "==", true));
+        
+        onSnapshot(q, (snap) => {
+            const container = document.getElementById('trashContainer');
+            container.innerHTML = '';
+
+            if (snap.empty) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-ghost"></i>
+                        <h4 class="fw-bold">السلة نظيفة تماماً</h4>
+                        <p class="text-muted">لا توجد أي بيانات مؤرشفة في الوقت الحالي</p>
+                    </div>`;
+                return;
+            }
+
+            snap.forEach((docSnap) => {
+                const item = docSnap.data();
+                const id = docSnap.id;
+                const deleteDate = item.deletedAt ? new Date(item.deletedAt.seconds * 1000).toLocaleDateString('ar-EG') : 'غير محدد';
+                
+                container.innerHTML += `
+                    <div class="trash-card d-flex justify-content-between align-items-center">
+                        <div class="item-main-info">
+                            <h6>${item.name}</h6>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="detail-tag"><i class="fas fa-tag me-1"></i> ${item.category}</span>
+                                <span class="detail-tag"><i class="fas fa-layer-group me-1"></i> ${item.totalPcs} قطعة</span>
+                                <span class="detail-tag text-danger"><i class="fas fa-calendar-times me-1"></i> حُذف في: ${deleteDate}</span>
+                            </div>
+                        </div>
+                        <div class="action-btns">
+                            <div class="btn-action btn-restore-v2" onclick="restoreItem('${id}', '${item.name}')" title="استعادة">
+                                <i class="fas fa-trash-restore-alt"></i>
+                            </div>
+                            <div class="btn-action btn-delete-v2" onclick="permanentDelete('${id}', '${item.name}')" title="حذف نهائي">
+                                <i class="fas fa-skull-crossbones"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    window.restoreItem = async (id, name) => {
+        if (confirm(`استعادة "${name}"؟ سيعود فوراً لقائمة الجرد النشطة.`)) {
+            await updateDoc(doc(db, "inventory", id), {
+                isDeleted: false,
+                restoredAt: serverTimestamp()
+            });
+        }
+    }
+
+    window.permanentDelete = async (id, name) => {
+        const pass = prompt(`تحذير نهائي: سيتم مسح بيانات "${name}" للأبد. اكتب "تأكيد" للمتابعة:`);
+        if (pass === "تأكيد") {
+            await deleteDoc(doc(db, "inventory", id));
+        }
+    }
+
+    listenToTrash();
+</script>
+</body>
+</html>

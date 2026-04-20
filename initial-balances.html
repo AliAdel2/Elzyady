@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أرصدة أول المدة للعملاء - Masar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 80px; }
+        
+        .header-section { 
+            padding: 20px; background: var(--glass); backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .info-alert {
+            background: rgba(88, 166, 255, 0.1); border: 1px dashed var(--neon-blue);
+            border-radius: 15px; padding: 15px; margin: 20px 0; font-size: 0.85rem; color: #58a6ff;
+        }
+
+        .cust-row {
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px; padding: 15px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .cust-name { font-weight: 700; font-size: 0.95rem; display: block; color: #fff; }
+        .cust-phone { font-size: 0.75rem; color: #8b949e; }
+
+        .input-group-custom { width: 140px; }
+        .balance-input {
+            background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.2) !important;
+            color: #fff !important; text-align: center; border-radius: 10px !important; font-weight: bold;
+        }
+        .balance-input:focus { border-color: var(--neon-blue) !important; box-shadow: none; }
+
+        .save-all-btn {
+            position: fixed; bottom: 20px; left: 20px; right: 20px;
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            border: none; border-radius: 15px; padding: 15px; font-weight: 700;
+            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4); z-index: 1001; color: white;
+        }
+
+        .search-box {
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: #fff; padding: 12px; margin-bottom: 15px; width: 100%;
+        }
+        .search-box:focus { border-color: var(--neon-blue); outline: none; }
+    </style>
+</head>
+<body>
+
+<div class="header-section">
+    <a href="javascript:history.back()" class="text-white"><i class="fas fa-arrow-right"></i></a>
+    <h5 class="m-0 fw-bold">أرصدة أول المدة للعملاء</h5>
+    <i class="fas fa-users-cog text-primary"></i>
+</div>
+
+<div class="container">
+    <div class="info-alert text-center">
+        <i class="fas fa-info-circle me-1"></i> يتم ضبط الرصيد الافتتاحي للعملاء (المبالغ المستحقة عليهم قبل بدء البرنامج).
+    </div>
+
+    <input type="text" id="searchInput" class="search-box" placeholder="بحث باسم العميل لضبط رصيده...">
+
+    <div id="customersList">
+        <div class="text-center mt-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<button class="btn save-all-btn" id="saveAllBtn">
+    <i class="fas fa-save me-2"></i> حفظ جميع الأرصدة الافتتاحية
+</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadCustomers() {
+        const listDiv = document.getElementById('customersList');
+        try {
+            const querySnapshot = await getDocs(collection(db, "customers"));
+            let html = '';
+            
+            if (querySnapshot.empty) {
+                listDiv.innerHTML = '<div class="text-center mt-5 opacity-50">لا يوجد عملاء مضافين حالياً</div>';
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                // تعديل: القراءة من initialBalance لتوحيد البيانات
+                const currentStartBal = data.initialBalance || 0;
+                
+                html += `
+                    <div class="cust-row" data-name="${data.name.toLowerCase()}">
+                        <div>
+                            <span class="cust-name">${data.name}</span>
+                            <span class="cust-phone"><i class="fas fa-phone-alt me-1" style="font-size: 10px;"></i> ${data.phone || 'بدون هاتف'}</span>
+                        </div>
+                        <div class="input-group-custom">
+                            <input type="number" 
+                                   class="form-control balance-input" 
+                                   data-id="${doc.id}" 
+                                   value="${currentStartBal}" 
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                `;
+            });
+
+            listDiv.innerHTML = html;
+
+            // تفعيل البحث اللحظي
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.cust-row').forEach(row => {
+                    row.style.display = row.getAttribute('data-name').includes(term) ? 'flex' : 'none';
+                });
+            });
+
+        } catch (error) {
+            console.error(error);
+            listDiv.innerHTML = '<div class="text-center text-danger">خطأ في تحميل بيانات العملاء</div>';
+        }
+    }
+
+    // حفظ الكل باستخدام Batch
+    document.getElementById('saveAllBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('saveAllBtn');
+        const inputs = document.querySelectorAll('.balance-input');
+        
+        if(!confirm("هل أنت متأكد من تحديث الأرصدة الافتتاحية لجميع العملاء؟")) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري الحفظ...';
+
+        try {
+            const batch = writeBatch(db);
+            
+            inputs.forEach(input => {
+                const custId = input.getAttribute('data-id');
+                const newVal = Number(input.value) || 0;
+                const docRef = doc(db, "customers", custId);
+                
+                // تعديل: التحديث في حقل initialBalance لتوحيد السيستم
+                batch.update(docRef, { 
+                    initialBalance: newVal
+                });
+            });
+
+            await batch.commit();
+            alert("تم تحديث أرصدة أول المدة بنجاح ✅");
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert("حدث خطأ أثناء حفظ أرصدة العملاء");
+            btn.disabled = false;
+            btn.innerHTML = 'حفظ جميع الأرصدة الافتتاحية';
+        }
+    });
+
+    loadCustomers();
+</script>
+</body>
+</html>

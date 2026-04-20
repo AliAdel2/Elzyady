@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كشف حساب مورد - Masar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-red: #f85149; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; overflow-x: hidden; }
+        
+        .header-section { 
+            padding: 12px 15px; 
+            background: rgba(20, 25, 35, 0.8); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            position: sticky; top: 0; z-index: 1000; 
+            backdrop-filter: blur(15px);
+        }
+        .header-container { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .nav-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .title-area { flex-grow: 1; text-align: center; overflow: hidden; }
+        .title-area h5 { font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; margin: 0; color: #fff; }
+
+        .summary-card {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(13, 17, 23, 0.9));
+            border-radius: 15px; padding: 20px; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .summary-card h2 { font-weight: 800; color: var(--neon-blue); margin: 5px 0; font-size: 1.8rem; }
+
+        .statement-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        .statement-table th { padding: 10px; font-size: 0.75rem; color: var(--neon-blue); text-transform: uppercase; letter-spacing: 1px; }
+        .statement-table tr { background: var(--glass); border-radius: 10px; transition: transform 0.2s; }
+        .statement-table td { padding: 12px 8px; text-align: center; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .statement-table tr td:first-child { border-radius: 0 10px 10px 0; }
+        .statement-table tr td:last-child { border-radius: 10px 0 0 10px; }
+        
+        .val-plus { color: var(--neon-red); font-weight: 700; } 
+        .val-minus { color: var(--neon-green); font-weight: 700; } 
+        .date-badge { font-size: 0.7rem; background: rgba(88, 166, 255, 0.15); color: var(--neon-blue); padding: 3px 7px; border-radius: 5px; }
+        .notes-text { font-size: 0.75rem; color: #8b949e; margin-top: 4px; font-style: italic; }
+
+        .btn-action { width: 38px; height: 38px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: var(--glass); color: #fff; transition: 0.3s; }
+        .btn-action:hover { background: var(--neon-blue); color: #000; }
+
+        #print-area { display: none; }
+        @media print {
+            body { background: #fff !important; }
+            #content-to-export { display: none; }
+            #print-area { display: block !important; padding: 20px; color: #000; }
+        }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+        .print-table th, .print-table td { border: 1px solid #333; padding: 8px; text-align: center; color: #000; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="content-to-export">
+    <div class="header-section">
+        <div class="header-container container">
+            <div class="nav-btns">
+                <button class="btn-action" onclick="generatePDF()"><i class="fas fa-file-pdf"></i></button>
+                <button class="btn-action" style="color: var(--neon-green);" onclick="exportToExcel()"><i class="fas fa-file-excel"></i></button>
+                <button class="btn-action" onclick="window.print()"><i class="fas fa-print"></i></button>
+            </div>
+            <div class="title-area">
+                <h5 class="fw-bold" id="titleName">كشف حساب مورد</h5>
+            </div>
+            <a href="javascript:history.back()" class="btn-action d-flex align-items-center justify-content-center text-decoration-none">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="summary-card d-flex justify-content-between align-items-center">
+            <div>
+                <span class="opacity-50 small">حد الائتمان</span>
+                <div class="fw-bold" id="displayLimit">0.00 ج.م</div>
+            </div>
+            <div class="text-end">
+                <span class="opacity-50 small">صافي المديونية الحالية</span>
+                <h2 id="displayTotal">0.00</h2>
+                <small id="balanceType" class="val-plus">جنيه مصري</small>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="statement-table" id="myTable">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>البيان</th>
+                        <th>مدين (عليك +)</th>
+                        <th>دائن (لك -)</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody">
+                    <tr><td colspan="4" class="text-center opacity-50">جاري تحميل البيانات...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="print-header d-flex justify-content-between align-items-center">
+        <div style="text-align: right;">
+            <h3 style="margin:0; color: #000;">شركة الزيادى لقطع الغيار</h3>
+            <p style="margin:0; color: #000;">تقرير كشف حساب مورد تفصيلي</p>
+        </div>
+        <div style="text-align: left;">
+            <p style="margin:0; color: #000;">التاريخ: <span id="p-date"></span></p>
+        </div>
+    </div>
+    <div style="margin-bottom: 20px; background: #f2f2f2; padding: 15px; border: 1px solid #333;">
+        <p style="margin: 5px 0; color: #000;"><strong>اسم المورد:</strong> <span id="p-name"></span></p>
+        <p style="margin: 5px 0; color: #000;"><strong>صافي الرصيد:</strong> <span id="p-balance" style="font-weight: bold;"></span></p>
+    </div>
+    <table class="print-table">
+        <thead>
+            <tr style="background: #e0e0e0;">
+                <th>التاريخ</th>
+                <th>البيان</th>
+                <th>مدين (+)</th>
+                <th>دائن (-)</th>
+            </tr>
+        </thead>
+        <tbody id="printBody"></tbody>
+    </table>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const supId = urlParams.get('id');
+
+    async function loadStatement() {
+        if(!supId) return;
+
+        try {
+            let combinedData = [];
+            
+            // جلب بيانات المورد والرصيد الافتتاحي باستخدام الحقل openingBalance
+            const supSnap = await getDoc(doc(db, "suppliers", supId));
+            if(supSnap.exists()){
+                const data = supSnap.data();
+                document.getElementById('titleName').innerText = `كشف: ${data.name}`;
+                document.getElementById('displayLimit').innerText = `${(data.creditLimit || 0).toLocaleString()} ج.م`;
+                document.getElementById('p-name').innerText = data.name;
+                document.getElementById('p-date').innerText = new Date().toLocaleDateString('ar-EG');
+                
+                const initial = Number(data.openingBalance) || 0;
+                if(initial !== 0) {
+                    combinedData.push({
+                        date: "0000-00-00", // لضمان بقاؤه في ذيل الترتيب الزمني
+                        type: "رصيد أول المدة",
+                        amount: Math.abs(initial),
+                        isOpening: true,
+                        isDebit: initial > 0 
+                    });
+                }
+            }
+
+            // جلب الحركات (سندات)
+            const qTrans = query(collection(db, "transactions"), where("partyId", "==", supId));
+            const transSnap = await getDocs(qTrans);
+            
+            // جلب الفواتير
+            const qInvoices = query(collection(db, "supplier_transactions"), where("supplierId", "==", supId));
+            const invSnap = await getDocs(qInvoices);
+
+            transSnap.forEach(doc => {
+                const d = doc.data();
+                combinedData.push({ 
+                    date: d.date, 
+                    type: d.type, 
+                    amount: Number(d.amount || 0), 
+                    notes: d.notes || (d.type === 'صرف' ? 'سند صرف نقدية' : 'سند قبض نقدية') 
+                });
+            });
+
+            invSnap.forEach(doc => {
+                const d = doc.data();
+                combinedData.push({ 
+                    date: d.date, 
+                    type: d.type || 'فاتورة شراء', 
+                    amount: Number(d.amount || d.total || 0), 
+                    notes: d.note || d.details || (d.type === 'مرتجع شراء' ? 'مرتجع مشتريات' : 'فاتورة مشتريات') 
+                });
+            });
+
+            // الترتيب: الأحدث فوق
+            combinedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const tbody = document.getElementById('statementBody');
+            const pbody = document.getElementById('printBody');
+            tbody.innerHTML = ''; pbody.innerHTML = '';
+
+            let totalDebit = 0;  
+            let totalCredit = 0; 
+
+            combinedData.forEach(t => {
+                let isDebit = false;
+                let isCredit = false;
+
+                if(t.isOpening) {
+                    isDebit = t.isDebit;
+                    isCredit = !t.isDebit;
+                } else {
+                    isDebit = (t.type.includes('شراء') && !t.type.includes('مرتجع')) || t.type === 'قبض';
+                    isCredit = t.type.includes('مرتجع') || t.type === 'صرف';
+                }
+                
+                if(isDebit) totalDebit += t.amount;
+                if(isCredit) totalCredit += t.amount;
+
+                const amountText = t.amount.toLocaleString(undefined, {minimumFractionDigits: 2});
+                const displayDate = t.isOpening ? '---' : t.date;
+                
+                const rowHtml = `
+                    <tr>
+                        <td><span class="date-badge">${displayDate}</span></td>
+                        <td class="text-end">
+                            <div class="fw-bold" style="color: ${isCredit ? 'var(--neon-green)' : 'inherit'};">
+                                ${t.type}
+                            </div>
+                            <div class="notes-text">${t.notes || ''}</div>
+                        </td>
+                        <td class="${isDebit ? 'val-plus' : ''}">${isDebit ? amountText : '-'}</td>
+                        <td class="${isCredit ? 'val-minus' : ''}">${isCredit ? amountText : '-'}</td>
+                    </tr>`;
+
+                tbody.innerHTML += rowHtml;
+                pbody.innerHTML += `<tr><td>${displayDate}</td><td>${t.type} - ${t.notes || ''}</td><td>${isDebit ? amountText : '-'}</td><td>${isCredit ? amountText : '-'}</td></tr>`;
+            });
+
+            const finalBalance = totalDebit - totalCredit;
+            const displayEl = document.getElementById('displayTotal');
+            displayEl.innerText = Math.abs(finalBalance).toLocaleString(undefined, {minimumFractionDigits: 2});
+            
+            if(finalBalance > 0) {
+                displayEl.style.color = 'var(--neon-red)';
+                document.getElementById('balanceType').innerText = 'مديونية للمورد عليك';
+                document.getElementById('balanceType').className = 'val-plus';
+            } else if(finalBalance < 0) {
+                displayEl.style.color = 'var(--neon-green)';
+                document.getElementById('balanceType').innerText = 'رصيد لك عند المورد';
+                document.getElementById('balanceType').className = 'val-minus';
+            } else {
+                displayEl.style.color = '#fff';
+                document.getElementById('balanceType').innerText = 'الحساب متزن';
+            }
+
+            document.getElementById('p-balance').innerText = finalBalance.toLocaleString() + ' ج.م';
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('statementBody').innerHTML = '<tr><td colspan="4" class="text-danger text-center">خطأ في التحميل</td></tr>';
+        }
+    }
+
+    window.generatePDF = () => {
+        const element = document.getElementById('print-area');
+        element.style.display = 'block';
+        const name = document.getElementById('p-name').innerText;
+        html2pdf().from(element).set({
+            margin: 10, filename: `كشف_${name}.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).save().then(() => element.style.display = 'none');
+    };
+
+    window.exportToExcel = () => {
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("myTable")), `كشف_حساب.xlsx`);
+    };
+
+    loadStatement();
+</script>
+</body>
+</html>

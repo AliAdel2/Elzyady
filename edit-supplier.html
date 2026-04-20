@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل بيانات المورد</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; --neon-orange: #f0883e; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 40px; }
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .edit-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 600px; margin: auto; }
+        .form-label { font-size: 0.85rem; margin-bottom: 6px; color: var(--neon-blue); font-weight: 600; padding-right: 5px; }
+        .form-control { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 12px; margin-bottom: 18px; }
+        .form-control:focus { background: rgba(255,255,255,0.08); border-color: var(--neon-blue); color: #fff; box-shadow: 0 0 10px rgba(88, 166, 255, 0.2); outline: none; }
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-save { background: linear-gradient(45deg, #007bff, #00d4ff); border: none; border-radius: 15px; padding: 14px; font-weight: 700; width: 100%; margin-top: 15px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); color: #fff; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .section-title { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loading-overlay">
+    <div class="spinner-border text-primary"></div>
+    <span class="ms-3">جاري جرد الحسابات...</span>
+</div>
+
+<div class="header-nav">
+    <div style="width: 40px;"></div>
+    <h5 class="m-0 fw-bold">تعديل بيانات المورد</h5>
+    <a href="javascript:history.back()" class="text-white"><i class="fas fa-arrow-left"></i></a>
+</div>
+
+<div class="container">
+    <div class="edit-card">
+        <form id="editForm">
+            <div class="section-title">المعلومات الأساسية</div>
+            <label class="form-label">اسم المورد</label>
+            <input type="text" id="supName" class="form-control" required>
+
+            <label class="form-label">رقم الهاتف</label>
+            <input type="tel" id="supPhone" class="form-control">
+
+            <label class="form-label">العنوان</label>
+            <input type="text" id="supAddress" class="form-control">
+
+            <div class="section-title">البيانات المالية (المحسوبة حالياً)</div>
+            <label class="form-label">الرصيد الحالي الفعلي</label>
+            <input type="number" id="supBalance" class="form-control" style="color: var(--neon-orange); font-weight: bold;" step="0.01" readonly>
+            <small class="d-block mb-3 opacity-50" style="margin-top: -15px;">* هذا الحقل للقراءة فقط (يُحسب من الحركات)</small>
+
+            <div class="row-grid">
+                <div>
+                    <label class="form-label">رصيد أول المدة</label>
+                    <input type="number" id="supOpening" class="form-control" step="0.01">
+                </div>
+                <div>
+                    <label class="form-label">حد الائتمان</label>
+                    <input type="number" id="supLimit" class="form-control" step="0.01">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-save">حفظ التغييرات</button>
+        </form>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const urlParams = new URLSearchParams(window.location.search);
+    const supId = urlParams.get('id');
+
+    // دالة جرد الحسابات (نفس منطق صفحة القائمة)
+    async function calculateSupplierBalance(supId, openingBal) {
+        const qTrans = query(collection(db, "transactions"), where("partyId", "==", supId));
+        const snapTrans = await getDocs(qTrans);
+        const qItems = query(collection(db, "supplier_transactions"), where("supplierId", "==", supId));
+        const snapItems = await getDocs(qItems);
+
+        let debt = 0;   // علينا
+        let credit = 0; // لنا
+
+        snapTrans.forEach(doc => {
+            const d = doc.data();
+            const amt = Number(d.amount) || 0;
+            if (d.type === "صرف") credit += amt;
+            else if (d.type === "قبض") debt += amt;
+        });
+
+        snapItems.forEach(doc => {
+            const d = doc.data();
+            const amt = Number(d.total) || Number(d.amount) || 0;
+            if (d.type === "شراء" || d.type === "فاتورة شراء") debt += amt;
+            else if (d.type === "مرتجع شراء") credit += amt;
+        });
+
+        return (Number(openingBal || 0) + debt) - credit;
+    }
+
+    async function loadCurrentData() {
+        if(!supId) return;
+        try {
+            const docRef = doc(db, "suppliers", supId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('supName').value = data.name || '';
+                document.getElementById('supPhone').value = data.phone || '';
+                document.getElementById('supAddress').value = data.address || '';
+                document.getElementById('supOpening').value = data.openingBalance || 0;
+                document.getElementById('supLimit').value = data.creditLimit || 0;
+
+                // حساب الرصيد الفعلي فوراً
+                const realBalance = await calculateSupplierBalance(supId, data.openingBalance);
+                document.getElementById('supBalance').value = realBalance;
+            }
+            document.getElementById('loader').style.display = 'none';
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'جاري الحفظ...';
+
+        try {
+            const docRef = doc(db, "suppliers", supId);
+            // تحديث البيانات الأساسية (الرصيد الحالي لا يُعدل يدوياً بل يُحسب من الحركات)
+            await updateDoc(docRef, {
+                name: document.getElementById('supName').value,
+                phone: document.getElementById('supPhone').value,
+                address: document.getElementById('supAddress').value,
+                openingBalance: Number(document.getElementById('supOpening').value),
+                creditLimit: Number(document.getElementById('supLimit').value)
+            });
+
+            alert("تم التعديل بنجاح");
+            window.location.href = `supplier-details.html?id=${supId}`;
+        } catch (error) {
+            alert("خطأ في الحفظ");
+            btn.disabled = false;
+        }
+    });
+
+    loadCurrentData();
+</script>
+</body>
+</html>

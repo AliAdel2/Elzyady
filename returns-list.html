@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل المرتجعات - شركة الزيادى</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-red: #f85149; --neon-blue: #58a6ff; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; }
+        
+        .header-section { 
+            padding: 15px; background: rgba(20, 25, 35, 0.8); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(15px);
+        }
+
+        .search-box {
+            background: var(--glass) !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px; padding: 12px 45px 12px 15px; color: #fff !important; width: 100%;
+            margin-bottom: 20px; outline: none;
+        }
+
+        .return-card {
+            background: var(--glass); border-radius: 15px; padding: 15px;
+            margin-bottom: 15px; border: 1px solid rgba(248, 81, 73, 0.2);
+            transition: 0.3s; cursor: pointer;
+        }
+        .return-card:hover { border-color: var(--neon-red); transform: translateY(-3px); background: rgba(255,255,255,0.08); }
+
+        .amount-badge {
+            background: rgba(248, 81, 73, 0.1); color: var(--neon-red);
+            padding: 5px 12px; border-radius: 8px; font-weight: 700;
+        }
+        .date-text { font-size: 0.8rem; color: #8b949e; }
+        .supplier-name { color: var(--neon-blue); font-weight: 700; font-size: 1.1rem; }
+
+        .modal-content { background: #161b22; border: 1px solid var(--neon-blue); color: #fff; border-radius: 15px; }
+        .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .table-dark-custom { background: transparent; color: #fff; width: 100%; }
+        .table-dark-custom th { color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 5px; text-align: start; }
+        .table-dark-custom td { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 5px; font-size: 0.9rem; text-align: start; }
+    </style>
+</head>
+<body>
+
+<div class="header-section">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h5 class="m-0 fw-bold"><i class="fas fa-undo-alt me-2 text-danger"></i>سجل مرتجعات المشتريات</h5>
+        <a href="purchase-mgmt.html" class="btn btn-outline-light btn-sm"><i class="fas fa-arrow-left"></i></a>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="position-relative">
+        <i class="fas fa-search position-absolute" style="right: 15px; top: 15px; color: var(--neon-blue);"></i>
+        <input type="text" class="search-box" id="searchInput" placeholder="بحث باسم المورد..." onkeyup="filterReturns()">
+    </div>
+    
+    <div id="returnsList">
+        <div class="text-center opacity-50 p-5"><div class="spinner-border text-danger"></div></div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل أصناف المرتجع</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function fetchSupplierName(id) {
+        if (!id) return 'مورد غير معروف';
+        try {
+            const sDoc = await getDoc(doc(db, "suppliers", id));
+            return sDoc.exists() ? sDoc.data().name : 'مورد غير معروف';
+        } catch { return 'مورد غير معروف'; }
+    }
+
+    async function loadReturns() {
+        const listDiv = document.getElementById('returnsList');
+        try {
+            // جلب المرتجعات مرتبة بالتاريخ الأحدث
+            const q = query(collection(db, "supplier_transactions"), where("type", "==", "مرتجع شراء"));
+            const querySnapshot = await getDocs(q);
+            listDiv.innerHTML = '';
+
+            if (querySnapshot.empty) {
+                listDiv.innerHTML = '<div class="text-center opacity-50 p-5">لا توجد مرتجعات مسجلة حتى الآن</div>';
+                return;
+            }
+
+            const returnsPromises = querySnapshot.docs.map(async (docSnapshot) => {
+                const data = docSnapshot.data();
+                // دعم الاسم المسجل مباشرة أو جلب الاسم من جدول الموردين
+                const sName = data.supplierName || await fetchSupplierName(data.supplierId);
+                const displayAmt = data.total || data.amount || 0;
+                return { ...data, sName, displayAmt };
+            });
+
+            const returnsData = await Promise.all(returnsPromises);
+            
+            // ترتيب المرتجعات يدوياً بالتاريخ (احتياطي لو الـ timestamp مش موجود)
+            returnsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            returnsData.forEach((data) => {
+                const card = document.createElement('div');
+                card.className = 'return-card';
+                card.setAttribute('data-name', data.sName);
+                card.onclick = () => showItems(data);
+
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="supplier-name">${data.sName}</div>
+                            <div class="date-text mt-1"><i class="far fa-calendar-alt me-1"></i> ${data.date}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="amount-badge">${Number(data.displayAmt).toLocaleString()} ج.م</div>
+                            <div class="small opacity-50 mt-1">قيمة المرتجع</div>
+                        </div>
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
+                    <div class="small italic text-info">
+                        <i class="fas fa-box-open me-1"></i> ${data.items ? data.items.length + ' أصناف مرتجعة' : 'تفاصيل المرتجع'}
+                    </div>
+                `;
+                listDiv.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error(error);
+            listDiv.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء تحميل البيانات</div>';
+        }
+    }
+
+    window.showItems = (data) => {
+        const modalBody = document.getElementById('modalBody');
+        let itemsRows = '';
+
+        if (data.items && data.items.length > 0) {
+            data.items.forEach(item => {
+                itemsRows += `
+                    <tr>
+                        <td>${item.name || 'صنف غير معروف'}</td>
+                        <td>${item.qty || 0}</td>
+                        <td>${Number(item.price || item.buy || 0).toLocaleString()}</td>
+                    </tr>`;
+            });
+
+            modalBody.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table-dark-custom">
+                        <thead>
+                            <tr><th>الصنف</th><th>الكمية</th><th>السعر</th></tr>
+                        </thead>
+                        <tbody>${itemsRows}</tbody>
+                    </table>
+                </div>
+                <div class="mt-4 p-2 text-start" style="border-top:1px solid rgba(255,255,255,0.1)">
+                    <small class="opacity-50">إجمالي قيمة المرتجع:</small>
+                    <h5 class="m-0 text-danger fw-bold">${Number(data.displayAmt).toLocaleString()} ج.م</h5>
+                </div>
+            `;
+        } else {
+            modalBody.innerHTML = '<div class="text-center p-3 opacity-50">لا توجد تفاصيل أصناف مسجلة لهذا المرتجع</div>';
+        }
+
+        new bootstrap.Modal(document.getElementById('detailsModal')).show();
+    }
+
+    window.filterReturns = () => {
+        const val = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.return-card').forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            card.style.display = name.includes(val) ? 'block' : 'none';
+        });
+    }
+
+    loadReturns();
+</script>
+</body>
+</html>

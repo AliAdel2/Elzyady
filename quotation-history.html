@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل عروض الأسعار - شركة الزيادى</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; }
+        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; }
+        .header-nav { padding: 20px; background: var(--glass); border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; }
+        .q-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 12px; border-right: 4px solid var(--neon-blue); }
+        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #8b949e; transition: 0.2s; }
+        .action-btn:hover { color: var(--neon-blue); transform: scale(1.1); }
+        .modal-content { background: #161b22; color: #fff; border-radius: 20px; border: 1px solid var(--neon-blue); }
+        .search-box { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; padding: 10px; width: 100%; margin-bottom: 15px; }
+        #printFrame { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header-nav d-flex justify-content-between align-items-center">
+    <h5 class="m-0 fw-bold">سجل عروض الأسعار</h5>
+    <a href="quotation.html" class="btn btn-primary btn-sm rounded-pill"><i class="fas fa-plus"></i> عرض جديد</a>
+</div>
+
+<div class="container mt-3">
+    <input type="text" id="searchInput" class="search-box" placeholder="بحث باسم العميل..." oninput="filterQuotes()">
+    
+    <div id="quotesList">
+        <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" id="modalBody"></div>
+            <div class="p-3 pt-0"><button class="btn btn-secondary w-100 rounded-pill" data-bs-dismiss="modal">إغلاق</button></div>
+        </div>
+    </div>
+</div>
+
+<iframe id="printFrame"></iframe>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let allQuotes = [];
+
+    window.loadQuotes = async () => {
+        const snap = await getDocs(query(collection(db, "quotations"), orderBy("timestamp", "desc")));
+        allQuotes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        render(allQuotes);
+    };
+
+    function render(data) {
+        const list = document.getElementById('quotesList');
+        if(data.length === 0) {
+            list.innerHTML = '<div class="text-center opacity-50 mt-5">لا توجد عروض أسعار مسجلة</div>';
+            return;
+        }
+        list.innerHTML = data.map(q => `
+            <div class="q-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <b class="d-block text-white">${q.customerName}</b>
+                        <small class="opacity-50" style="font-size: 0.75rem;">${q.date}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-primary fw-bold">${Number(q.total).toLocaleString()} ج.م</div>
+                        <small class="opacity-50" style="font-size:0.7rem">${q.items ? q.items.length : 0} أصناف</small>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-around mt-3 border-top border-secondary pt-2">
+                    <button class="action-btn" onclick="viewQuote('${q.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn" onclick="printQuote('${q.id}')"><i class="fas fa-print"></i></button>
+                    <button class="action-btn text-danger" onclick="deleteQuote('${q.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.filterQuotes = () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        render(allQuotes.filter(q => q.customerName.toLowerCase().includes(term)));
+    };
+
+    window.viewQuote = (id) => {
+        const q = allQuotes.find(item => item.id === id);
+        let itemsHtml = q.items.map(i => `
+            <div class="d-flex justify-content-between border-bottom border-secondary py-2 small">
+                <span>${i.name} (x${i.qty})</span>
+                <b>${(i.qty * i.price).toLocaleString()} ج.م</b>
+            </div>
+        `).join('');
+
+        document.getElementById('modalBody').innerHTML = `
+            <h6 class="text-primary mb-3">تفاصيل عرض السعر</h6>
+            ${itemsHtml}
+            <div class="mt-3 p-2 rounded bg-primary bg-opacity-10 d-flex justify-content-between">
+                <span>الإجمالي:</span>
+                <b class="text-primary">${Number(q.total).toLocaleString()} ج.م</b>
+            </div>`;
+        new bootstrap.Modal(document.getElementById('detailsModal')).show();
+    };
+
+    window.printQuote = (id) => {
+        const q = allQuotes.find(item => item.id === id);
+        let rows = q.items.map(i => `
+            <tr>
+                <td style="padding:8px; border-bottom:1px dashed #ccc;">${i.name}</td>
+                <td style="text-align:center;">${i.qty}</td>
+                <td style="text-align:left;">${(i.qty * i.price)}</td>
+            </tr>
+        `).join('');
+
+        const pri = document.getElementById('printFrame').contentWindow;
+        pri.document.open();
+        pri.document.write(`
+            <html dir="rtl"><head><style>
+                body { font-family: 'Arial'; padding: 10px; width: 72mm; margin: 0; }
+                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                table { width: 100%; font-size: 13px; margin-top: 10px; border-collapse: collapse; }
+                .total { margin-top: 10px; border-top: 2px solid #000; padding-top: 5px; font-weight: bold; display: flex; justify-content: space-between; font-size: 16px; }
+            </style></head>
+            <body>
+                <div class="header">
+                    <h2 style="margin:0;">إعادة طباعة عرض سعر</h2>
+                    <p style="margin:5px 0;">شركة الزيادى لقطع الغيار</p>
+                    <small>${q.date}</small>
+                </div>
+                <p><b>السيد/</b> ${q.customerName}</p>
+                <table>
+                    <thead><tr style="border-bottom: 1px solid #000;"><th>الصنف</th><th>ك</th><th>ج.م</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="total"><span>الإجمالي:</span><span>${q.total} ج.م</span></div>
+                <div class="text-center" style="margin-top:20px; font-size:10px;">شركة الزيادى - لخدمتكم دائماً</div>
+            </body></html>
+        `);
+        pri.document.close();
+        setTimeout(() => { pri.focus(); pri.print(); }, 500);
+    };
+
+    window.deleteQuote = async (id) => {
+        if(!confirm("حذف العرض من السجل؟")) return;
+        await deleteDoc(doc(db, "quotations", id));
+        loadQuotes();
+    };
+
+    loadQuotes();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
