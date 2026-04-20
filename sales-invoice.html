@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* الاستايل الجديد المعتمد لشركة الزيادي */
         :root { 
             --accent: #0b5e3d; 
             --header-bg: #0b5e3d;
@@ -22,14 +21,9 @@
         }
         
         body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
-        
-        /* Header */
         .header-nav { background: var(--header-bg); padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white; position: sticky; top: 0; z-index: 1000; }
-        
-        /* Main Card */
         .invoice-card { background: var(--white); border: 1px solid var(--border); border-radius: 25px; padding: 20px; margin-top: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
         
-        /* Inputs */
         .form-control, .form-select { 
             border: 1px solid var(--border) !important; 
             border-radius: 12px; 
@@ -40,14 +34,11 @@
             color: var(--text-primary) !important;
         }
         .form-control:focus { border-color: var(--accent) !important; box-shadow: 0 0 8px rgba(11, 94, 61, 0.2); }
-        
         input[type="number"] { color: var(--accent) !important; font-weight: bold; }
 
-        /* Product Row */
         .product-row { background: #f8faf9; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); position: relative; }
         .btn-remove { position: absolute; left: -10px; top: -10px; color: var(--danger); background: white; border-radius: 50%; font-size: 1.4rem; cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* Search Results Autocomplete */
         .search-results {
             position: absolute; width: 100%; background: white; border: 1px solid var(--border);
             border-radius: 10px; z-index: 100; max-height: 200px; overflow-y: auto;
@@ -55,39 +46,31 @@
         }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.85rem; color: var(--text-primary); }
         .search-item:hover { background: #f0f7f4; color: var(--accent); }
-        .search-item b { display: block; color: #333; }
-        .search-item span { font-size: 0.7rem; color: #777; }
 
-        /* Total & Payment */
         .total-box { background: var(--accent); color: white; border-radius: 20px; padding: 18px; text-align: center; margin-top: 20px; }
         .payment-box { background: #edf2ef; border-radius: 18px; padding: 15px; margin-top: 15px; border: 1px dashed var(--accent); }
         
-        /* Buttons */
-        .btn-save { background: var(--accent); border: none; border-radius: 15px; padding: 15px; width: 100%; font-weight: 800; color: white; margin-top: 20px; transition: 0.3s; }
-        .btn-outline-primary { color: var(--accent); border-color: var(--accent); }
-        .btn-outline-primary:hover { background-color: var(--accent); border-color: var(--accent); color: white; }
-        
+        .btn-save { background: var(--accent); border: none; border-radius: 15px; padding: 15px; width: 100%; font-weight: 800; color: white; margin-top: 20px; }
         .sub-lbl { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; display: block; font-weight: 700; }
         .unit-info-area { font-size: 0.75rem; margin-top: 8px; color: var(--success); font-weight: 700; }
-        .badge.bg-primary { background-color: var(--white) !important; color: var(--accent) !important; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="header-nav">
     <a href="javascript:void(0)" onclick="confirmBack()" class="text-white text-decoration-none"><i class="fas fa-arrow-right"></i></a>
-    <h6 class="m-0 fw-bold">فاتورة مبيعات <span id="modeText" class="badge bg-primary">جديدة</span></h6>
+    <h6 class="m-0 fw-bold">فاتورة مبيعات <span id="modeText" class="badge bg-light text-success" style="color:var(--accent)!important">جديدة</span></h6>
     <i class="fas fa-file-invoice text-white"></i>
 </div>
 
 <div class="container">
     <div class="invoice-card">
         <div class="row g-2 mb-4">
-            <div class="col-7">
+            <div class="col-7 position-relative">
                 <label class="sub-lbl">العميل</label>
-                <select id="customerSelect" class="form-select">
-                    <option value="walk-in">عميل نقدي (طياري)</option>
-                </select>
+                <input type="text" id="customerSearch" class="form-control" placeholder="ابحث عن عميل..." oninput="searchCustomer(this)" value="">
+                <input type="hidden" id="customerSelect" value="">
+                <div id="customerResults" class="search-results"></div>
             </div>
             <div class="col-5">
                 <label class="sub-lbl">التاريخ</label>
@@ -139,7 +122,6 @@
 </div>
 
 <script type="module">
-    // الكود البرمجي بالكامل كما هو بدون أي تعديل نهائياً
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, getDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -155,6 +137,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let inventory = [];
+    let customers = [];
     let editId = new URLSearchParams(window.location.search).get('edit');
     let isChanged = false;
 
@@ -171,30 +154,87 @@
                 getDocs(collection(db, "inventory"))
             ]);
             inventory = iSnap.docs.map(d => ({id: d.id, ...d.data()}));
+            customers = cSnap.docs.map(d => ({id: d.id, ...d.data()}));
             
-            const cSelect = document.getElementById('customerSelect');
-            cSnap.forEach(d => { cSelect.innerHTML += `<option value="${d.id}">${d.data().name}</option>`; });
-
             if(editId) {
                 document.getElementById('modeText').innerText = "تعديل";
                 const invDoc = await getDoc(doc(db, "invoices", editId));
                 if(invDoc.exists()) {
                     const data = invDoc.data();
                     document.getElementById('customerSelect').value = data.customerId;
+                    document.getElementById('customerSearch').value = data.customerName;
                     document.getElementById('invTime').value = data.time;
                     document.getElementById('payMethod').value = data.paymentMethod;
                     document.getElementById('paidAmount').value = data.paid;
-
-                    Object.keys(data).forEach(k => {
-                        if(!isNaN(k)) addNewRow(data[k]);
-                    });
+                    Object.keys(data).forEach(k => { if(!isNaN(k)) addNewRow(data[k]); });
                 }
-            } else {
-                addNewRow();
-            }
+            } else { addNewRow(); }
             calc();
         } catch (e) { console.error(e); }
     }
+
+    // بحث العملاء (أول اسم فقط)
+    window.searchCustomer = (input) => {
+        const term = input.value.toLowerCase().trim();
+        const resultsDiv = document.getElementById('customerResults');
+        if (term.length < 1) { 
+            resultsDiv.style.display = 'none'; 
+            return; 
+        }
+
+        const filtered = customers.filter(c => {
+            const firstWord = c.name.toLowerCase().split(" ")[0];
+            return firstWord.startsWith(term);
+        });
+        
+        resultsDiv.innerHTML = filtered.map(c => `
+            <div class="search-item" onclick="selectCustomer('${c.id}', '${c.name}')">
+                <b>${c.name}</b>
+                <span style="font-size:0.7rem; color:#666;">رصيد: ${c.currentBalance || 0}</span>
+            </div>
+        `).join('');
+
+        resultsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
+    };
+
+    window.selectCustomer = (id, name) => {
+        document.getElementById('customerSearch').value = name;
+        document.getElementById('customerSelect').value = id;
+        document.getElementById('customerResults').style.display = 'none';
+        isChanged = true;
+    };
+
+    // بحث الأصناف (أول اسم فقط)
+    window.searchProduct = (input) => {
+        const term = input.value.toLowerCase().trim();
+        const resultsDiv = input.parentElement.querySelector('.search-results');
+        if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
+
+        const filtered = inventory.filter(i => {
+            const firstWord = i.name.toLowerCase().split(" ")[0];
+            return firstWord.startsWith(term);
+        }).slice(0, 10);
+
+        resultsDiv.innerHTML = filtered.map(p => `
+            <div class="search-item" onclick="selectProduct('${input.closest('.product-row').id}', '${p.id}', '${p.name}')">
+                <b>${p.name}</b>
+                <span style="font-size:0.7rem;">المخزن: ${p.totalPcs} قطعة</span>
+            </div>
+        `).join('');
+        resultsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
+    };
+
+    window.selectProduct = (rowId, pid, pname) => {
+        const row = document.getElementById(rowId);
+        row.querySelector('.p-search').value = pname;
+        row.querySelector('.p-select').value = pid;
+        row.querySelector('.search-results').style.display = 'none';
+        const p = inventory.find(i => i.id === pid);
+        if(p) {
+            row.querySelector('.unit-info-area').innerHTML = `<i class="fas fa-warehouse me-1"></i> رصيد المخزن: ${p.totalPcs} ق`;
+            updateRowPrice(row.querySelector('.p-unit'));
+        }
+    };
 
     window.addNewRow = (oldData = null) => {
         const id = 'row_' + Math.random().toString(36).substr(2, 5);
@@ -204,7 +244,7 @@
                 <div class="row g-2 mb-2">
                     <div class="col-7 position-relative">
                         <span class="sub-lbl">ابحث عن الصنف</span>
-                        <input type="text" class="form-control p-search" placeholder="اكتب أول حرف..." oninput="searchProduct(this)" value="${oldData ? oldData.name : ''}">
+                        <input type="text" class="form-control p-search" placeholder="اكتب أول اسم..." oninput="searchProduct(this)" value="${oldData ? oldData.name : ''}">
                         <input type="hidden" class="p-select" value="${oldData ? oldData.stockId : ''}">
                         <div class="search-results"></div>
                     </div>
@@ -225,40 +265,6 @@
             </div>`;
         document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', html);
         return id;
-    };
-
-    window.searchProduct = (input) => {
-        const term = input.value.toLowerCase().trim();
-        const resultsDiv = input.parentElement.querySelector('.search-results');
-        if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
-
-        const filtered = inventory.filter(i => {
-            const firstWord = i.name.toLowerCase().split(" ")[0];
-            return firstWord.startsWith(term) || (i.barcode && i.barcode.startsWith(term));
-        }).slice(0, 10);
-
-        if (filtered.length > 0) {
-            resultsDiv.innerHTML = filtered.map(p => `
-                <div class="search-item" onclick="selectProduct('${input.closest('.product-row').id}', '${p.id}', '${p.name.replace(/'/g, "\\'")}')">
-                    <b>${p.name}</b>
-                    <span>المخزون: ${p.totalPcs} قطعة</span>
-                </div>
-            `).join('');
-            resultsDiv.style.display = 'block';
-        } else { resultsDiv.style.display = 'none'; }
-    };
-
-    window.selectProduct = (rowId, pid, pname) => {
-        const row = document.getElementById(rowId);
-        row.querySelector('.p-search').value = pname;
-        row.querySelector('.p-select').value = pid;
-        row.querySelector('.search-results').style.display = 'none';
-        
-        const p = inventory.find(i => i.id === pid);
-        if(p) {
-            row.querySelector('.unit-info-area').innerHTML = `<i class="fas fa-warehouse me-1"></i> رصيد المخزن: ${p.totalPcs} ق`;
-            updateRowPrice(row.querySelector('.p-unit'));
-        }
     };
 
     window.updateRowPrice = (unitSel) => {
@@ -296,6 +302,11 @@
 
     window.saveInvoice = async () => {
         const { total, paid, remaining } = calc();
+        const customerId = document.getElementById('customerSelect').value;
+        const customerName = document.getElementById('customerSearch').value;
+
+        if(!customerId || !customerName) return alert("الرجاء اختيار العميل");
+
         const items = {}; 
         let idx = 0;
         document.querySelectorAll('.product-row').forEach(r => {
@@ -316,8 +327,8 @@
 
         try {
             const invoiceData = {
-                customerId: document.getElementById('customerSelect').value,
-                customerName: document.getElementById('customerSelect').options[document.getElementById('customerSelect').selectedIndex].text,
+                customerId,
+                customerName,
                 total, paid, remaining, paymentMethod: document.getElementById('payMethod').value,
                 time: document.getElementById('invTime').value, timestamp: serverTimestamp(), ...items
             };
@@ -331,13 +342,13 @@
                     const qtyPcs = item.unit === 'box' ? (item.qty * (p.unitFactor || 1)) : item.qty;
                     await updateDoc(doc(db, "inventory", item.stockId), { totalPcs: increment(-qtyPcs) });
                 }
-                if(invoiceData.customerId !== 'walk-in' && remaining > 0) {
-                    await updateDoc(doc(db, "customers", invoiceData.customerId), { currentBalance: increment(remaining) });
+                if(remaining > 0) {
+                    await updateDoc(doc(db, "customers", customerId), { currentBalance: increment(remaining) });
                 }
                 await addDoc(collection(db, "invoices"), invoiceData);
             }
             isChanged = false;
-            alert("تمت العملية بنجاح");
+            alert("تم حفظ الفاتورة بنجاح");
             window.location.href = "sales-history.html";
         } catch(e) { alert("خطأ: " + e.message); saveBtn.disabled = false; }
     };
