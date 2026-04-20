@@ -160,9 +160,9 @@
 
             const actualPaid = totalPaidAtInvoiceTime + totalFromReceipts;
 
-            document.getElementById('totalAll').innerText = totalSales.toLocaleString('ar-EG');
-            document.getElementById('remAll').innerText = (totalSales - actualPaid).toLocaleString('ar-EG');
-            document.getElementById('paidAll').innerText = actualPaid.toLocaleString('ar-EG');
+            document.getElementById('totalAll').innerText = Math.round(totalSales).toLocaleString('ar-EG');
+            document.getElementById('remAll').innerText = Math.round(totalSales - actualPaid).toLocaleString('ar-EG');
+            document.getElementById('paidAll').innerText = Math.round(actualPaid).toLocaleString('ar-EG');
             
             render();
         } catch (e) { console.error(e); }
@@ -182,8 +182,8 @@
                         <small class="text-muted fw-bold" style="font-size: 0.7rem;"><i class="far fa-clock me-1"></i> ${inv.time}</small>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold m-0" style="color: var(--accent); font-size: 0.9rem;">${Number(inv.total).toLocaleString('ar-EG')}</div>
-                        ${inv.remaining > 0 ? `<div class="rem-badge mt-1">آجل: ${inv.remaining.toLocaleString('ar-EG')}</div>` : `<div class="cash-badge mt-1">خالص ✅</div>`}
+                        <div class="fw-bold m-0" style="color: var(--accent); font-size: 0.9rem;">${Math.round(inv.total).toLocaleString('ar-EG')}</div>
+                        ${inv.remaining > 0 ? `<div class="rem-badge mt-1">آجل: ${Math.round(inv.remaining).toLocaleString('ar-EG')}</div>` : `<div class="cash-badge mt-1">خالص ✅</div>`}
                     </div>
                 </div>
                 <div class="action-icons">
@@ -196,11 +196,9 @@
         `).join('');
     }
 
-    // دالة الطباعة المعدلة
     window.printInv = async (id) => {
         const inv = allInvoices.find(i => i.id === id);
         
-        // جلب مديونية العميل الكلية
         let customerBalance = 0;
         if(inv.customerId) {
             const cSnap = await getDoc(doc(db, "customers", inv.customerId));
@@ -213,8 +211,8 @@
                 rows += `<tr>
                     <td style="text-align:right; padding:5px 0; border-bottom:1px dashed #eee;">${inv[k].name}</td>
                     <td style="text-align:center;">${inv[k].qty}</td>
-                    <td style="text-align:center;">${Number(inv[k].price || 0).toFixed(2)}</td>
-                    <td style="text-align:left;">${(inv[k].qty * (inv[k].price || 0)).toFixed(2)}</td>
+                    <td style="text-align:center;">${Math.round(inv[k].price || 0).toLocaleString()}</td>
+                    <td style="text-align:left;">${Math.round(inv[k].qty * (inv[k].price || 0)).toLocaleString()}</td>
                 </tr>`;
             }
         });
@@ -238,7 +236,7 @@
             <body>
                 <div class="h">
                     <h3 style="margin:0">شركة الزيادي لقطع الغيار</h3>
-                    <p style="margin:2px"> زيوت - فلاتر السيارات </p>
+                    <p style="margin:2px">زيوت - فلاتر السيارات</p>
                     <small>${inv.time}</small>
                 </div>
                 <p style="margin:5px 0;"><b>العميل:</b> ${inv.customerName || 'عميل نقدي'}</p>
@@ -247,13 +245,13 @@
                     <tbody>${rows}</tbody>
                 </table>
                 <div class="total-sec">
-                    <div class="row-val bold"><span>إجمالي الفاتورة:</span><span>${total.toLocaleString()} ج.م</span></div>
-                    <div class="row-val"><span>المسدد:</span><span>${paid.toLocaleString()} ج.م</span></div>
-                    ${remaining > 0 ? `<div class="row-val"><span>متبقي من الفاتورة:</span><span>${remaining.toLocaleString()} ج.م</span></div>` : ''}
+                    <div class="row-val bold"><span>إجمالي الفاتورة:</span><span>${Math.round(total).toLocaleString()} ج.م</span></div>
+                    <div class="row-val"><span>المسدد:</span><span>${Math.round(paid).toLocaleString()} ج.م</span></div>
+                    ${remaining > 0 ? `<div class="row-val"><span>متبقي من الفاتورة:</span><span>${Math.round(remaining).toLocaleString()} ج.م</span></div>` : ''}
                     
                     <div class="row-val bold" style="margin-top:5px; border-top:1px solid #000; padding-top:5px;">
                         <span>إجمالي مديونية العميل:</span>
-                        <span>${customerBalance.toLocaleString()} ج.م</span>
+                        <span>${Math.round(customerBalance).toLocaleString()} ج.م</span>
                     </div>
                 </div>
                 <div class="footer">برجاء مراجعه الفاتوره بعد استلامها <br>تواصل معنا: 01027830834</div>
@@ -272,7 +270,7 @@
             if(!isNaN(k)) {
                 itemsHtml += `<div class="d-flex justify-content-between border-bottom py-2 small fw-bold">
                     <span>${inv[k].name} <span class="text-muted">(x${inv[k].qty})</span></span>
-                    <span>${(inv[k].qty * (inv[k].price || 0)).toLocaleString('ar-EG')}</span>
+                    <span>${Math.round(inv[k].qty * (inv[k].price || 0)).toLocaleString('ar-EG')}</span>
                 </div>`;
             }
         });
@@ -282,8 +280,8 @@
             </div>
             ${itemsHtml || '<p class="text-center small">لا توجد أصناف</p>'}
             <div class="mt-3 p-2 rounded bg-light border small">
-                <div class="d-flex justify-content-between fw-bold mb-1"><span>الإجمالي:</span><span>${Number(inv.total).toLocaleString('ar-EG')}</span></div>
-                <div class="d-flex justify-content-between fw-bold text-danger"><span>المتبقي:</span><span>${(inv.remaining || 0).toLocaleString('ar-EG')}</span></div>
+                <div class="d-flex justify-content-between fw-bold mb-1"><span>الإجمالي:</span><span>${Math.round(inv.total).toLocaleString('ar-EG')}</span></div>
+                <div class="d-flex justify-content-between fw-bold text-danger"><span>المتبقي:</span><span>${Math.round(inv.remaining || 0).toLocaleString('ar-EG')}</span></div>
             </div>`;
         new bootstrap.Modal(document.getElementById('viewModal')).show();
     };
