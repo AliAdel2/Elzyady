@@ -11,64 +11,41 @@
     <style>
         :root { --bg-dark: #0d1117; --glass: rgba(255,255,255,0.05); --neon: #58a6ff; }
         body { background: var(--bg-dark); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding: 10px; }
-        
-        .import-card { 
-            background: var(--glass); 
-            border: 2px dashed rgba(88, 166, 255, 0.3); 
-            border-radius: 20px; 
-            padding: 40px; 
-            text-align: center;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .import-card:hover { border-color: var(--neon); background: rgba(88, 166, 255, 0.05); }
-        
-        .preview-container {
-            background: var(--glass);
-            border-radius: 15px;
-            margin-top: 20px;
-            max-height: 400px;
-            overflow: auto;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .import-card { background: var(--glass); border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 20px; padding: 40px; text-align: center; cursor: pointer; }
+        .preview-container { background: var(--glass); border-radius: 15px; margin-top: 20px; max-height: 400px; overflow: auto; border: 1px solid rgba(255,255,255,0.1); }
         .table { color: white !important; font-size: 0.75rem; white-space: nowrap; }
         .loading-overlay { display: none; color: var(--neon); font-weight: bold; }
         .instruction-box { background: rgba(242, 202, 48, 0.1); border: 1px solid #f2ca30; border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 0.85rem; }
-        .btn-sample { background-color: #28a745; color: white; border: none; }
-        .btn-sample:hover { background-color: #218838; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold m-0 text-white"><i class="fas fa-file-excel me-2 text-success"></i> استيراد الأصناف</h4>
+        <h4 class="fw-bold m-0 text-white"><i class="fas fa-file-excel me-2 text-success"></i> استيراد الأصناف المطور</h4>
         <div class="d-flex gap-2">
-            <button class="btn btn-sample btn-sm px-3 fw-bold" onclick="downloadSample()">
-                <i class="fas fa-download me-1"></i> تحميل نموذج إكسيل
-            </button>
+            <button class="btn btn-success btn-sm fw-bold" onclick="downloadSample()">تحميل النموذج </button>
             <a href="inventory-menu.html" class="btn btn-outline-light btn-sm">رجوع</a>
         </div>
     </div>
 
     <div class="instruction-box">
-        <strong><i class="fas fa-lightbulb me-1"></i> تعليمات هامة للمخزن:</strong>
-        <ul>
-            <li>عمود <b>المعامل</b>: عدد القطع داخل الكرتونة الواحدة.</li>
-            <li>لإضافة قطع إضافية (كسور): استخدم العلامة العشرية. 
-                <br>مثال: إذا كانت الكرتونة بها 12 قطعة ولديك كرتونة و6 قطع، اكتب في الكمية <b>1.5</b>.
-            </li>
+        <strong><i class="fas fa-check-double me-1"></i> طريقة الإدخال الجديدة:</strong>
+        <p class="mb-0 small">لديك طريقتين لتعبئة الرصيد في الإكسيل:</p>
+        <ul class="small">
+            <li><b>مثال 1:</b> 10 كرتونة و 5 قطع (المعامل 12) -> اكتب 10 في عمود الكرتونة و 5 في عمود القطع.</li>
+            <li><b>مثال 2:</b> لو الصنف بالقطعة فقط -> اكتب الكمية في عمود القطع واجعل "المعامل" 1.</li>
         </ul>
     </div>
 
-    <div class="import-card" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-info"></i>
-        <h5>اضغط هنا لرفع ملف الإكسيل</h5>
+    <div class="import-card" onclick="document.getElementById('fileInput').click()">
+        <i class="fas fa-file-import fa-3x mb-3 text-info"></i>
+        <h5>ارفع ملف الإكسيل المحدث هنا</h5>
         <input type="file" id="fileInput" accept=".xlsx, .xls" class="d-none">
     </div>
 
     <div id="loading" class="text-center mt-3 loading-overlay">
-        <div class="spinner-border spinner-border-sm me-2"></div> جارٍ تحليل البيانات وتهيئة المستودع...
+        <div class="spinner-border spinner-border-sm"></div> جارٍ المعالجة الحسابية للقطع...
     </div>
 
     <div id="previewArea" style="display: none;">
@@ -78,9 +55,7 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <button class="btn btn-success w-100 mt-3 p-3 fw-bold shadow-lg" onclick="uploadToFirebase()">
-            <i class="fas fa-check-circle me-2"></i> تأكيد وحفظ الأصناف في المستودع
-        </button>
+        <button class="btn btn-primary w-100 mt-3 p-3 fw-bold" onclick="uploadToFirebase()">تأكيد الاستيراد النهائي</button>
     </div>
 </div>
 
@@ -102,16 +77,12 @@
     let jsonData = [];
 
     window.downloadSample = function() {
-        const headers = [
-            ["الاسم", "الفئة", "الباركود", "الكمية (كرتونة)", "حد الطلب", "سعر الشراء", "سعر البيع 1", "سعر البيع 2", "سعر البيع 3", "اسم الوحدة", "المعامل"]
-        ];
-        const sampleData = [
-            ["زيت توتال 5W30", "زيوت", "622100012345", 10.5, 2, 1200, 1500, 1450, 1400, "علبة", 12]
-        ];
+        const headers = [["الاسم", "الفئة", "الباركود", "كمية (كرتونة)", "قطع زائدة", "المعامل", "حد الطلب", "سعر الشراء", "سعر البيع 1", "اسم الوحدة"]];
+        const sampleData = [["زيت توتال", "زيوت", "622100", 10, 6, 12, 5, 1200, 1500, "علبة"]];
         const ws = XLSX.utils.aoa_to_sheet(headers.concat(sampleData));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Inventory");
-        XLSX.writeFile(wb, "Template_Al-Zyady.xlsx");
+        XLSX.writeFile(wb, "Template_Al-Zyady_New.xlsx");
     };
 
     document.getElementById('fileInput').addEventListener('change', handleFile);
@@ -122,10 +93,8 @@
         document.getElementById('loading').style.display = 'block';
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const data = evt.target.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            jsonData = XLSX.utils.sheet_to_json(sheet);
+            const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+            jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             displayPreview(jsonData);
             document.getElementById('loading').style.display = 'none';
         };
@@ -138,65 +107,51 @@
         const body = document.getElementById('tableBody');
         head.innerHTML = ''; body.innerHTML = '';
         const keys = Object.keys(data[0]);
-        let headRow = '<tr>';
-        keys.forEach(k => headRow += `<th>${k}</th>`);
-        head.innerHTML = headRow + '</tr>';
-        data.slice(0, 10).forEach(row => {
-            let bodyRow = '<tr>';
-            keys.forEach(k => bodyRow += `<td>${row[k] || ''}</td>`);
-            body.innerHTML += bodyRow + '</tr>';
+        head.innerHTML = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+        data.slice(0, 5).forEach(row => {
+            body.innerHTML += '<tr>' + keys.map(k => `<td>${row[k] || 0}</td>`).join('') + '</tr>';
         });
         document.getElementById('previewArea').style.display = 'block';
-        document.getElementById('countDisplay') ? document.getElementById('countDisplay').innerText = data.length : null;
     }
 
     window.uploadToFirebase = async function() {
-        if (!jsonData || jsonData.length === 0) return;
-        if (!confirm(`هل أنت متأكد من استيراد ${jsonData.length} صنف؟`)) return;
-        
+        if (jsonData.length === 0) return;
         document.getElementById('loading').style.display = 'block';
         const batch = writeBatch(db);
         const collectionRef = collection(db, "inventory");
 
         jsonData.forEach((item) => {
-            const newDoc = doc(collectionRef);
+            const factor = parseInt(item["المعامل"]) || 1;
+            const crates = parseFloat(item["كمية (كرتونة)"]) || 0;
+            const extraPcs = parseFloat(item["قطع زائدة"]) || 0;
             
-            // التعديل الجوهري: استخدام parseFloat للكمية لدعم الكسور (مثل 1.5 كرتونة)
-            const factor = parseInt(item["المعامل"] || item["unitFactor"]) || 1;
-            const qtyInCrates = parseFloat(item["الكمية (كرتونة)"] || item["الكمية"] || item["qty"]) || 0;
-            
-            // حساب إجمالي القطع بدقة (كرتونة * معامل) مع التقريب لأقرب قطعة
-            const totalPieces = Math.round(qtyInCrates * factor); 
+            // العملية الحسابية المكتملة
+            const totalPieces = Math.round((crates * factor) + extraPcs);
+            // إعادة حساب عمود الـ qty ككسر لضمان توافق العرض (مثلاً 10.5 كرتونة)
+            const finalQty = crates + (extraPcs / factor);
 
-            batch.set(newDoc, {
-                name: item["الاسم"] || item["name"] || "صنف جديد",
-                category: item["الفئة"] || item["category"] || "عام",
-                barcode: String(item["الباركود"] || item["barcode"] || ""),
-                qty: qtyInCrates,
+            batch.set(doc(collectionRef), {
+                name: item["الاسم"] || "صنف بدون اسم",
+                category: item["الفئة"] || "عام",
+                barcode: String(item["الباركود"] || ""),
+                qty: finalQty, // الكمية الإجمالية بنظام الكرتونة
                 unitFactor: factor,
-                totalPcs: totalPieces,
-                min: parseFloat(item["حد الطلب"] || item["min"]) || 3,
-                buy: parseFloat(item["سعر الشراء"] || item["buy"]) || 0,
-                sell: parseFloat(item["سعر البيع 1"] || item["sell"]) || 0,
-                sell2: parseFloat(item["سعر البيع 2"] || item["sell2"]) || 0,
-                sell3: parseFloat(item["سعر البيع 3"] || item["sell3"]) || 0,
-                unitName: item["اسم الوحدة"] || item["unitName"] || "قطعة",
+                totalPcs: totalPieces, // إجمالي القطع الفعلي للجرد
+                min: parseFloat(item["حد الطلب"]) || 0,
+                buy: parseFloat(item["سعر الشراء"]) || 0,
+                sell: parseFloat(item["سعر البيع 1"]) || 0,
+                unitName: item["اسم الوحدة"] || "قطعة",
                 isDeleted: false,
-                timestamp: serverTimestamp(),
-                lastUpdate: serverTimestamp()
+                timestamp: serverTimestamp()
             });
         });
 
         try {
             await batch.commit();
-            alert("✅ تم الاستيراد بنجاح! تم تحويل الكميات لقطع داخل المستودع.");
+            alert("تم الاستيراد بنجاح! تم دمج الكراتين والقطع في رصيد واحد.");
             window.location.href = "inventory-list.html";
-        } catch (e) {
-            console.error(e);
-            alert("❌ فشل الرفع: تأكد من الاتصال.");
-        } finally {
-            document.getElementById('loading').style.display = 'none';
-        }
+        } catch (e) { alert("حدث خطأ في الرفع"); }
+        document.getElementById('loading').style.display = 'none';
     }
 </script>
 </body>

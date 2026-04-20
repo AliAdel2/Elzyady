@@ -30,13 +30,14 @@
         .btn-delete:hover { background: var(--neon-red); color: #fff; }
         .price-text { color: var(--neon-blue); font-weight: 700; }
         .total-pcs-text { color: var(--neon-green); font-weight: 700; }
+        .qty-badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold m-0 text-white"><i class="fas fa-boxes me-2"></i> قائمة الجرد اللحظية</h4>
+        <h4 class="fw-bold m-0 text-white"><i class="fas fa-boxes me-2"></i> قائمة الجرد </h4>
         <div class="d-flex gap-2">
             <a href="trash.html" class="btn btn-outline-danger btn-sm px-3"><i class="fas fa-trash-restore"></i> السلة</a>
             <a href="inventory-menu.html" class="btn btn-outline-light btn-sm px-3">رجوع</a>
@@ -59,7 +60,7 @@
         <div class="col-6">
             <div class="stat-card">
                 <span class="stat-value text-danger" id="lowStockCount">0</span>
-                <small>أصناف أوشكت على النفاذ</small>
+                <small>أصناف تحت حد الطلب</small>
             </div>
         </div>
     </div>
@@ -76,8 +77,8 @@
                     <tr>
                         <th class="text-start">المنتج</th>
                         <th>الفئة</th>
-                        <th>الكمية الحالية</th>
-                        <th>الرصيد (قطعة)</th>
+                        <th>الكمية (كرتونة وقطع)</th>
+                        <th>إجمالي (قطعة)</th>
                         <th>سعر البيع</th>
                         <th>الحالة</th>
                         <th>إجراء</th>
@@ -106,10 +107,8 @@
     const db = getFirestore(app);
     let inventoryData = [];
 
-    // استماع لحظي للبيانات مع فلترة المحذوفات "سوفت ديليت"
     function listenToInventory() {
         onSnapshot(collection(db, "inventory"), (snap) => {
-            // نجلب فقط الأصناف التي ليس بها isDeleted == true
             inventoryData = [];
             snap.forEach(docSnap => {
                 const data = docSnap.data();
@@ -133,6 +132,7 @@
             const minTotalPcs = (Number(i.min) || 0) * factor;
 
             if (currentTotalPcs <= minTotalPcs) low++;
+            // الحساب بناءً على إجمالي القطع مقسوماً على المعامل ضرب سعر الشراء
             totalVal += (currentTotalPcs / factor) * (Number(i.buy) || 0);
         });
 
@@ -151,12 +151,16 @@
         ).forEach(item => {
             const factor = Number(item.unitFactor) || 1;
             const totalPcs = Number(item.totalPcs) || 0;
+            
+            // حساب الكراتين والقطع الزائدة للعرض
             const boxes = Math.floor(totalPcs / factor);
             const pieces = totalPcs % factor;
+            
+            // فحص النواقص بناءً على إجمالي القطع
             const isLow = totalPcs <= ((Number(item.min) || 0) * factor);
             
-            let qtyDisplay = `${boxes} ك`;
-            if(pieces > 0) qtyDisplay += ` و ${pieces} ق`;
+            let qtyDisplay = `<span class="qty-badge">${boxes} كرتونة</span>`;
+            if(pieces > 0) qtyDisplay += ` <span class="qty-badge text-info">${pieces} قطعة</span>`;
 
             tbody.innerHTML += `
                 <tr class="${isLow ? 'low-stock-row' : ''}">
@@ -165,10 +169,10 @@
                         <small class="text-muted" style="font-size:0.7rem">${item.barcode || '---'}</small>
                     </td>
                     <td><span class="badge bg-secondary opacity-75">${item.category}</span></td>
-                    <td><span class="fw-bold">${qtyDisplay}</span></td>
-                    <td><span class="total-pcs-text">${totalPcs}</span></td>
+                    <td><div class="d-flex flex-column gap-1">${qtyDisplay}</div></td>
+                    <td><span class="total-pcs-text">${totalPcs}</span> <small style="font-size:0.6rem">ق</small></td>
                     <td class="price-text">${Number(item.sell).toLocaleString()}</td>
-                    <td><span class="small ${isLow ? 'text-danger' : 'text-success'}">${isLow ? 'ناقص' : 'متوفر'}</span></td>
+                    <td><span class="badge ${isLow ? 'bg-danger' : 'bg-success'}">${isLow ? 'ناقص' : 'متوفر'}</span></td>
                     <td>
                         <div class="d-flex gap-2 justify-content-center">
                             <a href="add-product.html?edit=${item.id}" class="action-btn btn-edit"><i class="fas fa-edit"></i></a>
@@ -180,7 +184,6 @@
         });
     }
 
-    // تعديل دالة الحذف لتصبح "سوفت ديليت"
     window.softDeleteItem = async (id, name) => {
         if(confirm(`هل أنت متأكد من نقل "${name}" إلى سلة المحذوفات؟`)) { 
             try {
@@ -188,9 +191,7 @@
                     isDeleted: true,
                     deletedAt: serverTimestamp() 
                 });
-                // لا نحتاج لعمل ريندر لأن onSnapshot سيتكفل بالأمر
             } catch (e) {
-                console.error(e);
                 alert("حدث خطأ أثناء الحذف");
             }
         }
