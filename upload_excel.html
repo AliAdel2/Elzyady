@@ -52,8 +52,13 @@
     </div>
 
     <div class="instruction-box">
-        <strong><i class="fas fa-lightbulb me-1"></i> تعليمات هامة:</strong>
-        يرجى تحميل الملف التجريبي وتعبئته بنفس الترتيب. تأكد أن عمود <b>المعامل</b> يحتوي على عدد القطع داخل الكرتونة (مثلاً لو زيت كرتونته 12 علبة، اكتب 12).
+        <strong><i class="fas fa-lightbulb me-1"></i> تعليمات هامة للمخزن:</strong>
+        <ul>
+            <li>عمود <b>المعامل</b>: عدد القطع داخل الكرتونة الواحدة.</li>
+            <li>لإضافة قطع إضافية (كسور): استخدم العلامة العشرية. 
+                <br>مثال: إذا كانت الكرتونة بها 12 قطعة ولديك كرتونة و6 قطع، اكتب في الكمية <b>1.5</b>.
+            </li>
+        </ul>
     </div>
 
     <div class="import-card" id="dropZone" onclick="document.getElementById('fileInput').click()">
@@ -63,7 +68,7 @@
     </div>
 
     <div id="loading" class="text-center mt-3 loading-overlay">
-        <div class="spinner-border spinner-border-sm me-2"></div> جارٍ تحليل البيانات وتهيئة المخزن...
+        <div class="spinner-border spinner-border-sm me-2"></div> جارٍ تحليل البيانات وتهيئة المستودع...
     </div>
 
     <div id="previewArea" style="display: none;">
@@ -74,7 +79,7 @@
             </table>
         </div>
         <button class="btn btn-success w-100 mt-3 p-3 fw-bold shadow-lg" onclick="uploadToFirebase()">
-            <i class="fas fa-check-circle me-2"></i> تأكيد وحفظ (<span id="countDisplay">0</span> صنف) في المستودع
+            <i class="fas fa-check-circle me-2"></i> تأكيد وحفظ الأصناف في المستودع
         </button>
     </div>
 </div>
@@ -96,13 +101,12 @@
     const db = getFirestore(app);
     let jsonData = [];
 
-    // دالة تحميل ملف تجريبي
     window.downloadSample = function() {
         const headers = [
             ["الاسم", "الفئة", "الباركود", "الكمية (كرتونة)", "حد الطلب", "سعر الشراء", "سعر البيع 1", "سعر البيع 2", "سعر البيع 3", "اسم الوحدة", "المعامل"]
         ];
         const sampleData = [
-            ["زيت توتال 5W30", "زيوت", "622100012345", 10, 2, 1200, 1500, 1450, 1400, "علبة", 12]
+            ["زيت توتال 5W30", "زيوت", "622100012345", 10.5, 2, 1200, 1500, 1450, 1400, "علبة", 12]
         ];
         const ws = XLSX.utils.aoa_to_sheet(headers.concat(sampleData));
         const wb = XLSX.utils.book_new();
@@ -143,12 +147,12 @@
             body.innerHTML += bodyRow + '</tr>';
         });
         document.getElementById('previewArea').style.display = 'block';
-        document.getElementById('countDisplay').innerText = data.length;
+        document.getElementById('countDisplay') ? document.getElementById('countDisplay').innerText = data.length : null;
     }
 
     window.uploadToFirebase = async function() {
         if (!jsonData || jsonData.length === 0) return;
-        if (!confirm(`هل أنت متأكد من استيراد ${jsonData.length} صنف؟ سيعامل المخزن الكمية على أنها (كرتونة).`)) return;
+        if (!confirm(`هل أنت متأكد من استيراد ${jsonData.length} صنف؟`)) return;
         
         document.getElementById('loading').style.display = 'block';
         const batch = writeBatch(db);
@@ -157,10 +161,12 @@
         jsonData.forEach((item) => {
             const newDoc = doc(collectionRef);
             
-            // جلب البيانات مع ضمان العمليات الحسابية
+            // التعديل الجوهري: استخدام parseFloat للكمية لدعم الكسور (مثل 1.5 كرتونة)
             const factor = parseInt(item["المعامل"] || item["unitFactor"]) || 1;
             const qtyInCrates = parseFloat(item["الكمية (كرتونة)"] || item["الكمية"] || item["qty"]) || 0;
-            const totalPieces = Math.round(qtyInCrates * factor); // الحساب الجوهري للجرد
+            
+            // حساب إجمالي القطع بدقة (كرتونة * معامل) مع التقريب لأقرب قطعة
+            const totalPieces = Math.round(qtyInCrates * factor); 
 
             batch.set(newDoc, {
                 name: item["الاسم"] || item["name"] || "صنف جديد",
@@ -183,11 +189,11 @@
 
         try {
             await batch.commit();
-            alert("✅ تمت العملية بنجاح! تم استيراد كافة الأصناف وتحديث المستودع.");
+            alert("✅ تم الاستيراد بنجاح! تم تحويل الكميات لقطع داخل المستودع.");
             window.location.href = "inventory-list.html";
         } catch (e) {
             console.error(e);
-            alert("❌ فشل الرفع: تأكد من جودة الإنترنت وصحة بيانات الملف.");
+            alert("❌ فشل الرفع: تأكد من الاتصال.");
         } finally {
             document.getElementById('loading').style.display = 'none';
         }
@@ -195,4 +201,3 @@
 </script>
 </body>
 </html>
-
