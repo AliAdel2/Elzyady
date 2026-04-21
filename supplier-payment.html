@@ -3,57 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سند قبض وصرف</title>
+    <title>سند قبض وصرف - شركة الزيادى</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-green: #3fb950; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 30px; }
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --white: #ffffff;
+            --border: #dce3de;
+        }
+
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 30px; }
         
-        .header-section { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); background: var(--glass); }
+        .header-section { 
+            padding: 15px 20px; background: var(--header-bg); color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;
+        }
         
         .glass-card { 
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 25px; padding: 25px; margin-top: 20px; backdrop-filter: blur(15px); 
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 25px; padding: 25px; margin-top: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
 
         /* راديو بوتون المورد/العميل */
-        .type-selector { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
-        .form-check-input { background-color: var(--glass); border-color: var(--neon-blue); }
-        .form-check-input:checked { background-color: var(--neon-blue); }
+        .type-selector { display: flex; justify-content: center; gap: 30px; margin-bottom: 25px; }
+        .form-check-input { border-color: var(--accent); }
+        .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
+        .form-check-label { font-weight: 700; color: var(--accent); }
 
         /* أزرار قبض/صرف */
         .transaction-toggle { 
-            display: flex; background: rgba(0,0,0,0.3); border-radius: 15px; 
-            padding: 5px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; background: #e8f0ed; border-radius: 15px; 
+            padding: 5px; margin-bottom: 25px; border: 1px solid var(--border);
         }
         .t-btn { 
-            flex: 1; border: none; background: transparent; color: #8b949e; 
-            padding: 12px; border-radius: 12px; font-weight: 700; transition: 0.3s;
+            flex: 1; border: none; background: transparent; color: var(--accent); 
+            padding: 12px; border-radius: 12px; font-weight: 800; transition: 0.3s;
         }
-        .t-btn.active { background: var(--neon-blue); color: #000; }
+        .t-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 10px rgba(11, 94, 61, 0.2); }
 
-        .form-label { font-size: 0.85rem; margin-bottom: 8px; opacity: 0.7; padding-right: 5px; }
+        .form-label { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--accent); opacity: 0.8; padding-right: 5px; }
+        
         .form-control, .form-select { 
-            background: rgba(0,0,0,0.2) !important; border: 1px solid rgba(255,255,255,0.1) !important; 
-            color: #fff !important; border-radius: 12px; padding: 12px; margin-bottom: 20px;
+            background: var(--white) !important; border: 1px solid var(--border) !important; 
+            color: var(--text-primary) !important; border-radius: 12px; padding: 12px; margin-bottom: 20px;
+            font-weight: 600;
         }
-        .form-control:focus { border-color: var(--neon-blue) !important; box-shadow: 0 0 15px rgba(88, 166, 255, 0.1); }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--accent) !important; box-shadow: 0 0 10px rgba(11, 94, 61, 0.05); 
+        }
 
         .btn-confirm { 
-            background: var(--neon-blue); border: none; color: #000; font-weight: 800; 
+            background: var(--accent); border: none; color: #fff; font-weight: 800; 
             width: 100%; padding: 15px; border-radius: 15px; margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3); transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(11, 94, 61, 0.2); transition: 0.3s;
+            font-size: 1.1rem;
         }
         .btn-confirm:active { transform: scale(0.98); }
+        
+        .back-btn { color: white; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-<div class="header-section d-flex justify-content-between align-items-center">
-    <a href="supplier-list.html" class="text-white"><i class="fas fa-chevron-right"></i></a>
-    <h5 class="m-0 fw-bold">سند قبض وصرف</h5>
+<div class="header-section">
+    <a href="supplier-list.html" class="back-btn"><i class="fas fa-chevron-right"></i></a>
+    <h6 class="m-0 fw-bold">سند قبض وصرف نقدية</h6>
     <div style="width: 20px;"></div>
 </div>
 
@@ -61,11 +81,11 @@
     <div class="glass-card">
         <div class="type-selector">
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="partyType" id="isSupplier" checked>
+                <input class="form-check-input" type="radio" name="partyType" id="isSupplier" checked onchange="loadParties('suppliers')">
                 <label class="form-check-label ms-2" for="isSupplier">مورد</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="partyType" id="isCustomer">
+                <input class="form-check-input" type="radio" name="partyType" id="isCustomer" onchange="loadParties('customers')">
                 <label class="form-check-label ms-2" for="isCustomer">عميل</label>
             </div>
         </div>
@@ -75,37 +95,40 @@
             <button class="t-btn" id="btnIncome" onclick="setMode('قبض')">سند قبض</button>
         </div>
 
-        <label class="form-label">الاسم</label>
+        <label class="form-label"><i class="fas fa-user-tag me-1"></i> اختر الاسم من القائمة</label>
         <select id="partyName" class="form-select">
-            <option value="">اختر الاسم...</option>
-            </select>
+            <option value="">جاري تحميل القائمة...</option>
+        </select>
 
-        <label class="form-label">التاريخ</label>
+        <label class="form-label"><i class="fas fa-calendar-day me-1"></i> التاريخ</label>
         <input type="date" id="docDate" class="form-control">
 
-        <label class="form-label">ادخل القيمة</label>
-        <input type="number" id="amount" class="form-control" placeholder="0.00">
+        <label class="form-label"><i class="fas fa-money-bill-wave me-1"></i> المبلغ المطلوب</label>
+        <input type="number" id="amount" class="form-control" placeholder="0.00" style="font-size: 1.2rem; font-weight: 800; color: var(--accent) !important;">
 
-        <label class="form-label">الملاحظات</label>
-        <textarea id="notes" class="form-control" rows="3" placeholder="اكتب أي ملاحظات إضافية هنا..."></textarea>
+        <label class="form-label"><i class="fas fa-pen me-1"></i> البيان / الملاحظات</label>
+        <textarea id="notes" class="form-control" rows="3" placeholder="اكتب تفاصيل السند هنا..."></textarea>
 
-        <button class="btn-confirm" onclick="confirmTransaction()">تأكيد العملية</button>
+        <button class="btn-confirm" onclick="confirmTransaction()">
+            <i class="fas fa-check-circle me-1"></i> حـفظ السـند الآن
+        </button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
-  authDomain: "elzyady-da509.firebaseapp.com",
-  projectId: "elzyady-da509",
-  storageBucket: "elzyady-da509.firebasestorage.app",
-  messagingSenderId: "242117738897",
-  appId: "1:242117738897:web:d658d6ca335b316f7f9a30",
-  measurementId: "G-JPRK3BT495"
-      /* بياناتك هنا */ };
+        apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
+        authDomain: "elzyady-da509.firebaseapp.com",
+        projectId: "elzyady-da509",
+        storageBucket: "elzyady-da509.firebasestorage.app",
+        messagingSenderId: "242117738897",
+        appId: "1:242117738897:web:d658d6ca335b316f7f9a30",
+        measurementId: "G-JPRK3BT495"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -113,39 +136,44 @@
     const urlParams = new URLSearchParams(window.location.search);
     const targetId = urlParams.get('id');
 
-    // ضبط التاريخ الحالي تلقائياً
     document.getElementById('docDate').valueAsDate = new Date();
 
-    // وظيفة تبديل الوضع (قبض/صرف)
     window.setMode = (mode) => {
         currentMode = mode;
         document.getElementById('btnExpense').classList.toggle('active', mode === 'صرف');
         document.getElementById('btnIncome').classList.toggle('active', mode === 'قبض');
     };
 
-    // تحميل قائمة الأسماء
-    async function loadParties() {
+    // تحميل الأسماء بناءً على النوع (موردين أو عملاء)
+    window.loadParties = async (collectionName) => {
         const select = document.getElementById('partyName');
-        const snap = await getDocs(collection(db, "suppliers"));
-        snap.forEach(doc => {
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.text = doc.data().name;
-            if (doc.id === targetId) option.selected = true; // لو جاي من صفحة القائمة يحدده
-            select.appendChild(option);
-        });
-    }
+        select.innerHTML = '<option value="">اختر الاسم...</option>';
+        try {
+            const snap = await getDocs(collection(db, collectionName));
+            snap.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.text = doc.data().name;
+                if (doc.id === targetId) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
-    // تنفيذ العملية
     window.confirmTransaction = async () => {
         const id = document.getElementById('partyName').value;
         const amt = parseFloat(document.getElementById('amount').value);
-        if(!id || !amt) return alert("يرجى إكمال البيانات");
+        const partyType = document.getElementById('isSupplier').checked ? 'suppliers' : 'customers';
+        
+        if(!id || !amt) return alert("برجاء اختيار الاسم وإدخال المبلغ");
 
         try {
-            // 1. تسجيل السند في كولكشن Transactions
+            // 1. تسجيل السند
             await addDoc(collection(db, "transactions"), {
                 partyId: id,
+                partyType: partyType,
                 type: currentMode,
                 amount: amt,
                 date: document.getElementById('docDate').value,
@@ -153,22 +181,30 @@
                 createdAt: serverTimestamp()
             });
 
-            // 2. تحديث رصيد المورد (لو صرف يقلل المديونية، لو قبض يزيدها - حسب اللوجيك بتاعك)
-            const adjustment = currentMode === 'صرف' ? -amt : amt;
-            const supplierRef = doc(db, "suppliers", id);
-            await updateDoc(supplierRef, {
+            // 2. تحديث الرصيد
+            // لو مورد: صرف يقلل المديونية، قبض يزيدها
+            // لو عميل: قبض يقلل المديونية، صرف يزيدها
+            let adjustment = 0;
+            if (partyType === 'suppliers') {
+                adjustment = currentMode === 'صرف' ? -amt : amt;
+            } else {
+                adjustment = currentMode === 'قبض' ? -amt : amt;
+            }
+
+            const partyRef = doc(db, partyType, id);
+            await updateDoc(partyRef, {
                 currentBalance: increment(adjustment)
             });
 
-            alert("تم تسجيل السند وتحديث الرصيد بنجاح");
-            window.location.href = "supplier-list.html";
+            alert("تم حفظ السند بنجاح وتحديث الحساب");
+            window.location.href = partyType === 'suppliers' ? "supplier-list.html" : "customer-list.html";
         } catch (e) {
-            console.error(e);
-            alert("حدث خطأ أثناء التنفيذ");
+            alert("حدث خطأ أثناء حفظ البيانات");
         }
     };
 
-    loadParties();
+    // التشغيل الأولي
+    loadParties('suppliers');
 </script>
 
 </body>
