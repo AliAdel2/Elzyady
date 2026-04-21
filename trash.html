@@ -20,7 +20,6 @@
 
         body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
 
-        /* الهيدر */
         .header-floating {
             background: var(--accent); padding: 15px 0; position: sticky;
             top: 0; z-index: 1000; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -31,7 +30,6 @@
             border-radius: 8px; font-size: 0.75rem; font-weight: 700;
         }
 
-        /* كروت المحذوفات */
         .trash-card {
             background: var(--white); border: 1px solid var(--border); border-radius: 20px;
             padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
@@ -97,13 +95,14 @@
     <div id="trashContainer">
         <div class="text-center py-5">
             <div class="spinner-border text-success"></div>
+            <p class="mt-2 text-muted">جاري تحميل الأصناف...</p>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
@@ -119,15 +118,17 @@
     let trashItems = [];
 
     function listenToTrash() {
-        const q = query(collection(db, "inventory"), where("isDeleted", "==", true));
-        
-        onSnapshot(q, (snap) => {
+        // نستخدم listen على المجموعة كاملة ونفلتر برمجياً لتجنب مشاكل الـ Indexing في البداية
+        onSnapshot(collection(db, "inventory"), (snap) => {
             const container = document.getElementById('trashContainer');
             const clearBtn = document.getElementById('clearAllBtn');
             container.innerHTML = '';
             trashItems = [];
 
-            if (snap.empty) {
+            // فلترة الأصناف التي تحمل علامة الحذف
+            const deletedDocs = snap.docs.filter(doc => doc.data().isDeleted === true);
+
+            if (deletedDocs.length === 0) {
                 clearBtn.style.display = 'none';
                 container.innerHTML = `
                     <div class="empty-state">
@@ -139,7 +140,7 @@
             }
 
             clearBtn.style.display = 'block';
-            snap.forEach((docSnap) => {
+            deletedDocs.forEach((docSnap) => {
                 const item = docSnap.data();
                 const id = docSnap.id;
                 trashItems.push({id, ...item});
@@ -169,10 +170,9 @@
         });
     }
 
-    // --- وظيفة الحذف النهائي للكل ---
     window.clearTrashCompletely = async () => {
         const count = trashItems.length;
-        const pass = prompt(`تنبيه خطير: سيتم حذف عدد (${count}) صنف نهائياً من قاعدة البيانات. لن يمكنك استعادتهم أبداً. اكتب "حذف الكل" للتأكيد:`);
+        const pass = prompt(`تنبيه خطير: سيتم حذف عدد (${count}) صنف نهائياً. اكتب "حذف الكل" للتأكيد:`);
         
         if (pass === "حذف الكل") {
             try {
@@ -198,7 +198,7 @@
     }
 
     window.permanentDelete = async (id, name) => {
-        const pass = prompt(`تنبيه: سيتم حذف "${name}" نهائياً ولن تتمكن من استعادته. اكتب "تأكيد" للمتابعة:`);
+        const pass = prompt(`تنبيه: سيتم حذف "${name}" نهائياً. اكتب "تأكيد" للمتابعة:`);
         if (pass === "تأكيد") {
             await deleteDoc(doc(db, "inventory", id));
         }
