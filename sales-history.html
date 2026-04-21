@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { 
             --accent: #0b5e3d; 
@@ -20,7 +21,7 @@
             --success: #2d6a4f;
         }
 
-        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; overflow-x: hidden; }
 
         /* Header */
         .header-nav { 
@@ -72,6 +73,19 @@
 
         .add-btn { background: rgba(255,255,255,0.2); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; }
         #printFrame { display: none; }
+
+        /* تصميم قالب الصورة */
+        #shareContainer {
+            display: none;
+            width: 450px; background: #fff; padding: 25px;
+            font-family: 'Cairo', sans-serif; color: #000;
+        }
+        .share-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 15px; }
+        .share-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .share-table th { border-bottom: 1px solid #000; padding: 8px 0; font-size: 14px; }
+        .share-table td { padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 15px; font-weight: 600; }
+        .share-total-sec { border-top: 2px solid #000; margin-top: 15px; padding-top: 10px; }
+        .share-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -104,6 +118,30 @@
 
 <div id="listContainer">
     <div class="text-center p-5"><div class="spinner-border spinner-border-sm" style="color: var(--accent);"></div></div>
+</div>
+
+<div id="shareContainer">
+    <div class="share-header">
+        <h3 style="margin:0; color: #0b5e3d;">شركة الزيادي لقطع الغيار</h3>
+        <p style="margin:5px 0; font-weight:bold;">زيوت - فلاتر السيارات</p>
+        <small id="s-date"></small>
+    </div>
+    <p><b>العميل:</b> <span id="s-client"></span></p>
+    <table class="share-table">
+        <thead><tr><th style="text-align:right;">الصنف</th><th>ك</th><th>سعر</th><th style="text-align:left;">إجمالي</th></tr></thead>
+        <tbody id="s-body"></tbody>
+    </table>
+    <div class="share-total-sec">
+        <div class="share-row" style="font-weight:800; font-size:18px;"><span>إجمالي الفاتورة:</span><span id="s-total"></span></div>
+        <div class="share-row"><span>المسدد:</span><span id="s-paid"></span></div>
+        <div class="share-row" id="s-rem-row" style="color:red; font-weight:bold;"><span>متبقي من الفاتورة:</span><span id="s-rem"></span></div>
+        <div class="share-row" style="margin-top:10px; border-top:1px solid #000; padding-top:10px; font-weight:bold;">
+            <span>إجمالي مديونية العميل:</span><span id="s-balance"></span>
+        </div>
+    </div>
+    <div style="text-align:center; margin-top:20px; border-top:1px dashed #000; padding-top:10px; font-size:12px;">
+        برجاء مراجعه الفاتوره بعد استلامها <br> تواصل معنا: 01027830834
+    </div>
 </div>
 
 <div class="modal fade" id="viewModal" tabindex="-1">
@@ -189,12 +227,72 @@
                 <div class="action-icons">
                     <button class="action-btn" onclick="showInv('${inv.id}')"><i class="fas fa-eye" style="color: var(--info)"></i></button>
                     <button class="action-btn" onclick="editInv('${inv.id}')"><i class="fas fa-pen-nib" style="color: var(--success)"></i></button>
+                    <button class="action-btn" onclick="shareInv('${inv.id}', this)"><i class="fas fa-share-alt" style="color: #007bff"></i></button>
                     <button class="action-btn" onclick="printInv('${inv.id}')"><i class="fas fa-print" style="color: #6c757d"></i></button>
                     <button class="action-btn" onclick="deleteInv('${inv.id}')"><i class="fas fa-trash-alt" style="color: var(--danger)"></i></button>
                 </div>
             </div>
         `).join('');
     }
+
+    // --- دالة المشاركة كصورة ---
+    window.shareInv = async (id, btn) => {
+        const icon = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        const inv = allInvoices.find(i => i.id === id);
+        const shareContainer = document.getElementById('shareContainer');
+        
+        let balance = 0;
+        if(inv.customerId) {
+            const c = await getDoc(doc(db, "customers", inv.customerId));
+            if(c.exists()) balance = c.data().currentBalance || 0;
+        }
+
+        // ملء البيانات في القالب
+        document.getElementById('s-date').innerText = inv.time;
+        document.getElementById('s-client').innerText = inv.customerName || 'عميل نقدي';
+        document.getElementById('s-total').innerText = Math.round(inv.total).toLocaleString() + " ج.م";
+        document.getElementById('s-paid').innerText = Math.round(inv.total - inv.remaining).toLocaleString() + " ج.م";
+        document.getElementById('s-rem').innerText = Math.round(inv.remaining).toLocaleString() + " ج.م";
+        document.getElementById('s-balance').innerText = Math.round(balance).toLocaleString() + " ج.م";
+        document.getElementById('s-rem-row').style.display = inv.remaining > 0 ? 'flex' : 'none';
+
+        let rows = "";
+        Object.keys(inv).forEach(k => {
+            if(!isNaN(k)) {
+                rows += `<tr>
+                    <td style="text-align:right;">${inv[k].name}</td>
+                    <td style="text-align:center;">${inv[k].qty}</td>
+                    <td style="text-align:center;">${Math.round(inv[k].price).toLocaleString()}</td>
+                    <td style="text-align:left;">${Math.round(inv[k].qty * inv[k].price).toLocaleString()}</td>
+                </tr>`;
+            }
+        });
+        document.getElementById('s-body').innerHTML = rows;
+
+        try {
+            // إظهار مؤقت للتصوير
+            shareContainer.style.display = 'block';
+            shareContainer.style.position = 'fixed';
+            shareContainer.style.left = '-9999px'; 
+
+            const canvas = await html2canvas(shareContainer, { scale: 3, useCORS: true, backgroundColor: "#ffffff" });
+            shareContainer.style.display = 'none';
+
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+            const file = new File([blob], `فاتورة_${inv.customerName}.png`, { type: 'image/png' });
+
+            if (navigator.share) {
+                await navigator.share({ files: [file], title: 'شركة الزيادي', text: `فاتورة العميل: ${inv.customerName}` });
+            } else {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL();
+                link.download = `فاتورة_${inv.customerName}.png`;
+                link.click();
+            }
+        } catch (err) { console.error(err); shareContainer.style.display = 'none'; }
+        btn.innerHTML = icon;
+    };
 
     window.printInv = async (id) => {
         const inv = allInvoices.find(i => i.id === id);
