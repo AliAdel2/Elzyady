@@ -41,6 +41,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold m-0 text-white"><i class="fas fa-boxes me-2"></i> قائمة الجرد </h4>
         <div class="d-flex gap-2">
+            <button onclick="clearAllInventory()" class="btn btn-danger btn-sm px-3"><i class="fas fa-exclamation-triangle"></i> تصفير المخزن</button>
             <a href="trash.html" class="btn btn-outline-danger btn-sm px-3"><i class="fas fa-trash-restore"></i> السلة</a>
             <a href="inventory-menu.html" class="btn btn-outline-light btn-sm px-3">رجوع</a>
         </div>
@@ -94,7 +95,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, updateDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, updateDoc, doc, onSnapshot, serverTimestamp, writeBatch, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
@@ -108,7 +109,34 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let inventoryData = [];
-    let displayLimit = 50; // محدد العرض لتسريع الصفحة
+    let displayLimit = 50;
+
+    // --- وظيفة المسح الشامل (نقل كل المخزن للسلة) ---
+    window.clearAllInventory = async () => {
+        const firstConfirm = confirm("⚠️ تحذير: أنت على وشك حذف جميع الأصناف الموجودة في المخزن حالياً ونقلها للسلة. هل أنت متأكد؟");
+        if (!firstConfirm) return;
+
+        const secondConfirm = confirm("استنى! هل أنت متأكد فعلاً؟ سيتم مسح " + inventoryData.length + " صنف.");
+        if (!secondConfirm) return;
+
+        try {
+            const batch = writeBatch(db);
+            // نأخذ الأصناف الموجودة حالياً فقط (التي لم تُحذف بعد)
+            inventoryData.forEach(item => {
+                const itemRef = doc(db, "inventory", item.id);
+                batch.update(itemRef, { 
+                    isDeleted: true, 
+                    deletedAt: serverTimestamp() 
+                });
+            });
+
+            await batch.commit();
+            alert("تم تصفير المخزن بنجاح ونقل جميع الأصناف للسلة.");
+        } catch (e) {
+            console.error(e);
+            alert("حدث خطأ أثناء محاولة التصفير.");
+        }
+    };
 
     function listenToInventory() {
         onSnapshot(collection(db, "inventory"), (snap) => {
@@ -143,19 +171,15 @@
     }
 
     window.renderStock = function(isMore = false) {
-        // إذا لم يكن ضغطاً على "عرض المزيد"، نعيد الليميت لـ 50
         if (!isMore) displayLimit = 50; 
-
         const term = document.getElementById('searchStock').value.toLowerCase();
         const tbody = document.getElementById('stockTable');
         
-        // تصفية البيانات
         const filtered = inventoryData.filter(i => 
             i.name.toLowerCase().includes(term) || 
             (i.barcode && i.barcode.includes(term))
         );
 
-        // تحديد البيانات التي سيتم رسمها (لو فيه بحث نعرض كله، لو مفيش نلتزم بالليميت)
         const dataToShow = (term === "") ? filtered.slice(0, displayLimit) : filtered;
 
         let rowsHtml = ''; 
@@ -192,7 +216,6 @@
 
         tbody.innerHTML = rowsHtml;
 
-        // إظهار زرار "عرض المزيد" فقط لو فيه بيانات تانية ومفيش بحث شغال
         if (filtered.length > displayLimit && term === "") {
             tbody.innerHTML += `
                 <tr>
