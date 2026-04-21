@@ -18,121 +18,58 @@
             --success: #2d6a4f;
         }
 
-        body { 
-            background: var(--bg-light); 
-            font-family: 'Cairo', sans-serif; 
-            color: var(--text-primary); 
-            padding-bottom: 50px;
-        }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
 
         /* الهيدر */
         .header-floating {
-            background: var(--accent);
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: var(--accent); padding: 15px 0; position: sticky;
+            top: 0; z-index: 1000; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .trash-badge {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px;
+            border-radius: 8px; font-size: 0.75rem; font-weight: 700;
         }
 
         /* كروت المحذوفات */
         .trash-card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 18px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-            position: relative;
-            overflow: hidden;
-            transition: 0.3s;
+            background: var(--white); border: 1px solid var(--border); border-radius: 20px;
+            padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            position: relative; overflow: hidden; transition: 0.3s;
         }
-        .trash-card:active { transform: scale(0.98); }
-
         .trash-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; width: 5px; height: 100%;
-            background: var(--danger);
-            opacity: 0.6;
-        }
-
-        .item-main-info h6 { 
-            font-size: 1rem; 
-            font-weight: 800; 
-            margin-bottom: 6px;
-            color: var(--text-primary);
+            content: ''; position: absolute; top: 0; right: 0; width: 5px; height: 100%;
+            background: var(--danger); opacity: 0.6;
         }
 
         .detail-tag {
-            display: inline-flex;
-            align-items: center;
-            background: var(--bg-light);
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.7rem;
-            color: #555;
-            font-weight: 700;
-            margin-left: 5px;
+            display: inline-flex; align-items: center; background: var(--bg-light);
+            padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; color: #555;
+            font-weight: 700; margin-left: 5px;
         }
 
-        /* الأزرار */
         .action-btns { display: flex; gap: 8px; }
-        
         .btn-action {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 1rem;
+            width: 42px; height: 42px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; border: 1px solid var(--border);
+            cursor: pointer; transition: 0.2s; font-size: 1rem;
         }
-
         .btn-restore-v2 { background: #e8f5e9; color: var(--success); border-color: #c8e6c9; }
-        .btn-restore-v2:hover { background: var(--success); color: white; }
-
         .btn-delete-v2 { background: #ffebee; color: var(--danger); border-color: #ffcdd2; }
-        .btn-delete-v2:hover { background: var(--danger); color: white; }
 
         .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            background: var(--white);
-            border-radius: 25px;
-            border: 2px dashed var(--border);
-            margin-top: 30px;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--border);
-            margin-bottom: 15px;
+            padding: 60px 20px; text-align: center; background: var(--white);
+            border-radius: 25px; border: 2px dashed var(--border); margin-top: 30px;
         }
         
-        .back-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            padding: 6px 15px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
+        .header-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 6px 12px; border-radius: 10px; text-decoration: none;
+            font-size: 0.8rem; font-weight: 700; transition: 0.3s;
         }
+        .header-btn:hover { background: rgba(255,255,255,0.3); color: white; }
+        .btn-clear-all { background: var(--danger); border: none; }
+        .btn-clear-all:hover { background: #b00321; }
     </style>
 </head>
 <body>
@@ -145,9 +82,14 @@
                 <i class="fas fa-history me-1"></i> أرشيف الجرد
             </span>
         </div>
-        <a href="inventory-list.html" class="back-btn">
-             الرجوع للجرد <i class="fas fa-chevron-left ms-1"></i>
-        </a>
+        <div class="d-flex gap-2">
+            <button id="clearAllBtn" class="header-btn btn-clear-all" style="display: none;" onclick="clearTrashCompletely()">
+                <i class="fas fa-fire me-1"></i> حذف الكل نهائياً
+            </button>
+            <a href="inventory-list.html" class="header-btn">
+                 الرجوع للجرد <i class="fas fa-chevron-left ms-1"></i>
+            </a>
+        </div>
     </div>
 </div>
 
@@ -161,7 +103,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
@@ -174,15 +116,19 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    let trashItems = [];
 
     function listenToTrash() {
         const q = query(collection(db, "inventory"), where("isDeleted", "==", true));
         
         onSnapshot(q, (snap) => {
             const container = document.getElementById('trashContainer');
+            const clearBtn = document.getElementById('clearAllBtn');
             container.innerHTML = '';
+            trashItems = [];
 
             if (snap.empty) {
+                clearBtn.style.display = 'none';
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-box-open"></i>
@@ -192,16 +138,18 @@
                 return;
             }
 
+            clearBtn.style.display = 'block';
             snap.forEach((docSnap) => {
                 const item = docSnap.data();
                 const id = docSnap.id;
+                trashItems.push({id, ...item});
                 const deleteDate = item.deletedAt ? new Date(item.deletedAt.seconds * 1000).toLocaleDateString('ar-EG') : 'تاريخ غير معروف';
                 
                 container.innerHTML += `
                     <div class="trash-card d-flex justify-content-between align-items-center">
                         <div class="item-main-info">
-                            <h6>${item.name}</h6>
-                            <div class="d-flex flex-wrap gap-1">
+                            <h6 class="fw-bold m-0">${item.name}</h6>
+                            <div class="d-flex flex-wrap gap-1 mt-2">
                                 <span class="detail-tag"><i class="fas fa-tag me-1"></i> ${item.category}</span>
                                 <span class="detail-tag"><i class="fas fa-cubes me-1"></i> ${item.totalPcs} قطعة</span>
                                 <span class="detail-tag text-danger"><i class="fas fa-clock me-1"></i> ${deleteDate}</span>
@@ -219,6 +167,25 @@
                 `;
             });
         });
+    }
+
+    // --- وظيفة الحذف النهائي للكل ---
+    window.clearTrashCompletely = async () => {
+        const count = trashItems.length;
+        const pass = prompt(`تنبيه خطير: سيتم حذف عدد (${count}) صنف نهائياً من قاعدة البيانات. لن يمكنك استعادتهم أبداً. اكتب "حذف الكل" للتأكيد:`);
+        
+        if (pass === "حذف الكل") {
+            try {
+                const batch = writeBatch(db);
+                trashItems.forEach(item => {
+                    batch.delete(doc(db, "inventory", item.id));
+                });
+                await batch.commit();
+                alert("تم إفراغ السلة بنجاح.");
+            } catch (e) {
+                alert("حدث خطأ أثناء الحذف: " + e.message);
+            }
+        }
     }
 
     window.restoreItem = async (id, name) => {
