@@ -23,61 +23,33 @@
 
         body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; overflow-x: hidden; }
 
-        /* Header */
         .header-nav { 
             background: var(--header-bg); padding: 12px 20px; color: white;
             display: flex; justify-content: space-between; align-items: center; 
             position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* Stats Cards */
-        .stats-container { 
-            display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; scrollbar-width: none;
-        }
-        .stat-card { 
-            background: var(--white); border: 1px solid var(--border); 
-            border-radius: 12px; padding: 20px 8px; 
-            min-width: 100px; flex: 1; text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        }
+        .stats-container { display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; scrollbar-width: none; }
+        .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 8px; min-width: 100px; flex: 1; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .stat-title { font-size: 0.65rem; color: #6c757d; margin-bottom: 2px; font-weight: 700; }
         .stat-value { font-weight: 800; font-size: 0.85rem; line-height: 1; }
 
-        /* Search Bar */
         .search-container { padding: 0 15px 12px 15px; position: relative; }
-        .search-input { 
-            width: 100%; background: var(--white); border: 1px solid var(--border); 
-            padding: 10px 40px 10px 15px; border-radius: 12px; 
-            color: var(--text-primary); outline: none; font-weight: 600; font-size: 0.9rem;
-        }
+        .search-input { width: 100%; background: var(--white); border: 1px solid var(--border); padding: 10px 40px 10px 15px; border-radius: 12px; color: var(--text-primary); outline: none; font-weight: 600; font-size: 0.9rem; }
         .search-icon { position: absolute; right: 28px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 0.9rem; }
 
-        /* Invoice Card */
-        .inv-card { 
-            background: var(--white); border: 1px solid var(--border); 
-            border-radius: 18px; padding: 15px; margin: 0 15px 12px 15px; 
-            transition: 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.03);
-        }
-        .inv-card:hover { transform: translateY(-2px); }
-
+        .inv-card { background: var(--white); border: 1px solid var(--border); border-radius: 18px; padding: 15px; margin: 0 15px 12px 15px; transition: 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.03); }
         .rem-badge { font-size: 0.65rem; background: #fff5f5; color: var(--danger); padding: 3px 10px; border-radius: 8px; font-weight: 800; }
         .cash-badge { font-size: 0.65rem; background: #f0fff4; color: var(--success); padding: 3px 10px; border-radius: 8px; font-weight: 800; }
 
-        /* Action Buttons */
         .action-icons { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f1f1; }
-        .action-btn { 
-            background: #f8faf9; border: 1px solid var(--border); color: #4a5568; 
-            width: 38px; height: 38px; border-radius: 10px; 
-            display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
-        }
-
+        .action-btn { background: #f8faf9; border: 1px solid var(--border); color: #4a5568; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
         .add-btn { background: rgba(255,255,255,0.2); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; }
+        
         #printFrame { display: none; }
 
-        /* تصميم قالب الصورة */
         #shareContainer {
-            display: none;
-            width: 450px; background: #fff; padding: 25px;
+            display: none; width: 450px; background: #fff; padding: 25px;
             font-family: 'Cairo', sans-serif; color: #000;
         }
         .share-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 15px; }
@@ -135,10 +107,7 @@
         <div class="share-row" style="font-weight:800; font-size:18px;"><span>إجمالي الفاتورة:</span><span id="s-total"></span></div>
         <div class="share-row"><span>المسدد:</span><span id="s-paid"></span></div>
         <div class="share-row" id="s-rem-row" style="color:red; font-weight:bold;"><span>متبقي من الفاتورة:</span><span id="s-rem"></span></div>
-        <div class="share-row" style="margin-top:10px; border-top:1px solid #000; padding-top:10px; font-weight:bold;">
-            <span>إجمالي مديونية العميل:</span><span id="s-balance"></span>
-        </div>
-    </div>
+        <div id="s-balance-box"></div> </div>
     <div style="text-align:center; margin-top:20px; border-top:1px dashed #000; padding-top:10px; font-size:12px;">
         برجاء مراجعه الفاتوره بعد استلامها <br> تواصل معنا: 01027830834
     </div>
@@ -172,6 +141,26 @@
     const db = getFirestore(app);
     let allInvoices = [];
 
+    // --- دالة الحساب الدقيق (Audit) المأخوذة من صفحة العملاء ---
+    async function getRealDebt(customerId, initialBalance = 0) {
+        try {
+            const qInvoices = query(collection(db, "invoices"), where("customerId", "==", customerId));
+            const snapInvoices = await getDocs(qInvoices);
+            let invoiceDebt = 0;
+            snapInvoices.forEach(doc => { invoiceDebt += (Number(doc.data().remaining) || 0); });
+
+            const qTrans = query(collection(db, "transactions"), where("partyId", "==", customerId));
+            const snapTrans = await getDocs(qTrans);
+            let transEffect = 0;
+            snapTrans.forEach(doc => {
+                const tr = doc.data();
+                if(tr.type === 'قبض') transEffect -= (Number(tr.amount) || 0);
+                else if(tr.type === 'صرف') transEffect += (Number(tr.amount) || 0);
+            });
+            return Number(initialBalance) + invoiceDebt + transEffect;
+        } catch (e) { return Number(initialBalance); }
+    }
+
     window.loadInvoices = async () => {
         try {
             const [invSnap, transSnap] = await Promise.all([
@@ -183,21 +172,15 @@
             
             let totalSales = 0;
             let totalPaidAtInvoiceTime = 0;
-
             allInvoices.forEach(inv => {
-                const total = Number(inv.total || 0);
-                const rem = Number(inv.remaining || 0);
-                totalSales += total;
-                totalPaidAtInvoiceTime += (total - rem);
+                totalSales += Number(inv.total || 0);
+                totalPaidAtInvoiceTime += (Number(inv.total) - Number(inv.remaining || 0));
             });
 
             let totalFromReceipts = 0;
-            transSnap.forEach(t => {
-                totalFromReceipts += Number(t.data().amount || 0);
-            });
+            transSnap.forEach(t => { totalFromReceipts += Number(t.data().amount || 0); });
 
             const actualPaid = totalPaidAtInvoiceTime + totalFromReceipts;
-
             document.getElementById('totalAll').innerText = Math.round(totalSales).toLocaleString('ar-EG');
             document.getElementById('remAll').innerText = Math.round(totalSales - actualPaid).toLocaleString('ar-EG');
             document.getElementById('paidAll').innerText = Math.round(actualPaid).toLocaleString('ar-EG');
@@ -235,27 +218,34 @@
         `).join('');
     }
 
-    // --- دالة المشاركة كصورة ---
     window.shareInv = async (id, btn) => {
         const icon = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         const inv = allInvoices.find(i => i.id === id);
         const shareContainer = document.getElementById('shareContainer');
         
-        let balance = 0;
+        let realDebt = 0;
         if(inv.customerId) {
-            const c = await getDoc(doc(db, "customers", inv.customerId));
-            if(c.exists()) balance = c.data().currentBalance || 0;
+            const cSnap = await getDoc(doc(db, "customers", inv.customerId));
+            const initialBalance = cSnap.exists() ? (cSnap.data().initialBalance || 0) : 0;
+            realDebt = await getRealDebt(inv.customerId, initialBalance);
         }
 
-        // ملء البيانات في القالب
+        let previousBalance = realDebt - (Number(inv.remaining) || 0);
+
         document.getElementById('s-date').innerText = inv.time;
         document.getElementById('s-client').innerText = inv.customerName || 'عميل نقدي';
         document.getElementById('s-total').innerText = Math.round(inv.total).toLocaleString() + " ج.م";
         document.getElementById('s-paid').innerText = Math.round(inv.total - inv.remaining).toLocaleString() + " ج.م";
         document.getElementById('s-rem').innerText = Math.round(inv.remaining).toLocaleString() + " ج.م";
-        document.getElementById('s-balance').innerText = Math.round(balance).toLocaleString() + " ج.م";
         document.getElementById('s-rem-row').style.display = inv.remaining > 0 ? 'flex' : 'none';
+
+        document.getElementById('s-balance-box').innerHTML = `
+            <div class="share-row" style="font-size: 14px; color: #444;"><span>مديونية سابقة:</span><span>${Math.round(previousBalance).toLocaleString()} ج.م</span></div>
+            <div class="share-row" style="margin-top:10px; border-top:1.5px solid #000; padding-top:10px; font-weight:800; font-size:18px;">
+                <span>إجمالي الحساب:</span><span>${Math.round(realDebt).toLocaleString()} ج.م</span>
+            </div>
+        `;
 
         let rows = "";
         Object.keys(inv).forEach(k => {
@@ -271,37 +261,27 @@
         document.getElementById('s-body').innerHTML = rows;
 
         try {
-            // إظهار مؤقت للتصوير
             shareContainer.style.display = 'block';
-            shareContainer.style.position = 'fixed';
-            shareContainer.style.left = '-9999px'; 
-
+            shareContainer.style.position = 'fixed'; shareContainer.style.left = '-9999px'; 
             const canvas = await html2canvas(shareContainer, { scale: 3, useCORS: true, backgroundColor: "#ffffff" });
             shareContainer.style.display = 'none';
-
             const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
             const file = new File([blob], `فاتورة_${inv.customerName}.png`, { type: 'image/png' });
-
-            if (navigator.share) {
-                await navigator.share({ files: [file], title: 'شركة الزيادي', text: `فاتورة العميل: ${inv.customerName}` });
-            } else {
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL();
-                link.download = `فاتورة_${inv.customerName}.png`;
-                link.click();
-            }
+            if (navigator.share) { await navigator.share({ files: [file], title: 'شركة الزيادي' }); }
+            else { const link = document.createElement('a'); link.href = canvas.toDataURL(); link.download = `فاتورة.png`; link.click(); }
         } catch (err) { console.error(err); shareContainer.style.display = 'none'; }
         btn.innerHTML = icon;
     };
 
     window.printInv = async (id) => {
         const inv = allInvoices.find(i => i.id === id);
-        
-        let customerBalance = 0;
+        let realDebt = 0;
         if(inv.customerId) {
             const cSnap = await getDoc(doc(db, "customers", inv.customerId));
-            if(cSnap.exists()) customerBalance = cSnap.data().currentBalance || 0;
+            const initialBalance = cSnap.exists() ? (cSnap.data().initialBalance || 0) : 0;
+            realDebt = await getRealDebt(inv.customerId, initialBalance);
         }
+        let previousBalance = realDebt - (Number(inv.remaining) || 0);
 
         let rows = "";
         Object.keys(inv).forEach(k => {
@@ -346,10 +326,10 @@
                     <div class="row-val bold"><span>إجمالي الفاتورة:</span><span>${Math.round(total).toLocaleString()} ج.م</span></div>
                     <div class="row-val"><span>المسدد:</span><span>${Math.round(paid).toLocaleString()} ج.م</span></div>
                     ${remaining > 0 ? `<div class="row-val"><span>متبقي من الفاتورة:</span><span>${Math.round(remaining).toLocaleString()} ج.م</span></div>` : ''}
-                    
-                    <div class="row-val bold" style="margin-top:5px; border-top:1px solid #000; padding-top:5px;">
-                        <span>إجمالي مديونية العميل:</span>
-                        <span>${Math.round(customerBalance).toLocaleString()} ج.م</span>
+                    <div class="row-val" style="margin-top:5px; font-size:12px; color:#555;"><span>مديونية سابقة:</span><span>${Math.round(previousBalance).toLocaleString()} ج.م</span></div>
+                    <div class="row-val bold" style="margin-top:5px; border-top:1.5px solid #000; padding-top:5px;">
+                        <span>إجمالي الحساب:</span>
+                        <span>${Math.round(realDebt).toLocaleString()} ج.م</span>
                     </div>
                 </div>
                 <div class="footer">برجاء مراجعه الفاتوره بعد استلامها <br>تواصل معنا: 01027830834</div>
@@ -373,9 +353,7 @@
             }
         });
         document.getElementById('modalBody').innerHTML = `
-            <div class="text-center mb-2">
-                <h6 class="fw-bold mt-2 small">تفاصيل الفاتورة</h6>
-            </div>
+            <div class="text-center mb-2"><h6 class="fw-bold mt-2 small">تفاصيل الفاتورة</h6></div>
             ${itemsHtml || '<p class="text-center small">لا توجد أصناف</p>'}
             <div class="mt-3 p-2 rounded bg-light border small">
                 <div class="d-flex justify-content-between fw-bold mb-1"><span>الإجمالي:</span><span>${Math.round(inv.total).toLocaleString('ar-EG')}</span></div>
