@@ -3,97 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كبار العملاء - Masar</title>
+    <title>كبار العملاء - شركة الزيادى</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --bg-dark: #0d1117; 
-            --glass: rgba(255,255,255,0.05); 
-            --gold: #f2ca30;
-            --neon-blue: #58a6ff; 
-            --text-gray: #c9d1d9;
+            --accent: #0b5e3d; 
+            --bg-light: #f4f7f6;
+            --white: #ffffff;
+            --gold: #d4af37;
+            --silver: #aaa9ad;
+            --bronze: #cd7f32;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
         }
         
-        body { background: var(--bg-dark); font-family: 'Cairo', sans-serif; color: var(--text-gray); }
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); }
         
         .header { 
-            background: rgba(13, 17, 23, 0.9); padding: 20px; 
-            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: var(--accent); padding: 15px 20px; 
+            color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
         }
 
+        /* منصة التتويج */
         .top-three {
             display: flex; justify-content: space-around; align-items: flex-end;
-            padding: 30px 10px; margin-bottom: 20px;
-            background: radial-gradient(circle at top, rgba(242, 202, 48, 0.1), transparent);
+            padding: 40px 10px 20px 10px; margin: 15px;
+            background: var(--white); border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
         }
 
-        .rank-box { text-align: center; position: relative; width: 30%; }
+        .rank-box { text-align: center; position: relative; width: 32%; }
         .rank-avatar { 
-            width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--glass);
+            width: 55px; height: 55px; border-radius: 50%; border: 3px solid #eee;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-            margin: 0 auto 10px auto; background: var(--bg-dark);
+            margin: 0 auto 10px auto; background: var(--bg-light); color: var(--accent);
         }
-        .rank-1 .rank-avatar { width: 85px; height: 85px; border-color: var(--gold); box-shadow: 0 0 20px rgba(242, 202, 48, 0.2); font-size: 2rem; }
-        .rank-crown { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 1.2rem; }
-
-        .customer-row {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 15px; margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .sales-value { color: var(--gold); font-weight: bold; display: block; font-size: 0.9rem; }
-        .badge-rank { background: rgba(255,255,255,0.1); width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin-left: 10px; }
         
-        .name-limit { 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            max-width: 100%; display: block; 
+        /* المركز الأول */
+        .rank-1 .rank-avatar { 
+            width: 75px; height: 75px; border-color: var(--gold); 
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2); font-size: 1.8rem; 
+        }
+        .rank-1 .rank-avatar i { color: var(--gold); }
+        .rank-crown { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 1.5rem; }
+
+        .sales-value { color: var(--accent); font-weight: 800; display: block; font-size: 0.85rem; margin-top: 2px; }
+        .name-limit { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-size: 0.8rem; font-weight: 700; }
+
+        /* الكروت */
+        .customer-row {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 15px; padding: 12px 15px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s;
+        }
+        .customer-row:active { transform: scale(0.98); background: #fafafa; }
+
+        .badge-rank { 
+            background: var(--bg-light); color: var(--accent); font-weight: 800;
+            width: 28px; height: 28px; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.75rem; 
         }
 
-        /* ستايل الجدول الجديد */
+        /* الجدول */
         .table-container {
-            background: var(--glass);
-            border-radius: 20px;
-            padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-            overflow-x: auto;
+            background: var(--white); border-radius: 20px; padding: 10px;
+            border: 1px solid var(--border); overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
-        .custom-table { width: 100%; color: var(--text-gray); border-collapse: collapse; }
-        .custom-table th { color: var(--neon-blue); font-size: 0.85rem; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .custom-table td { padding: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .custom-table tr:last-child td { border-bottom: none; }
+        .custom-table { width: 100%; border-collapse: collapse; }
+        .custom-table th { background: #f8faf9; color: var(--accent); font-size: 0.75rem; padding: 12px; font-weight: 800; text-align: center; }
+        .custom-table td { padding: 12px 8px; font-size: 0.85rem; border-top: 1px solid #f1f1f1; text-align: center; }
+        
+        .section-title { font-weight: 800; color: var(--accent); font-size: 0.9rem; padding: 0 5px; }
+
     </style>
 </head>
 <body>
 
 <div class="header d-flex justify-content-between align-items-center">
-    <i class="fas fa-chevron-right text-white" onclick="history.back()"></i>
-    <h5 class="m-0 fw-bold">كبار العملاء (الأكثر شراءً)</h5>
+    <i class="fas fa-chevron-right" onclick="history.back()" style="cursor: pointer;"></i>
+    <h6 class="m-0 fw-bold">كبار العملاء (الأكثر سحباً)</h6>
     <i class="fas fa-medal text-warning"></i>
 </div>
 
 <div class="container pb-5">
-    <div class="top-three" id="podium"></div>
+    <div class="top-three" id="podium">
+        <div class="text-center py-4 w-100 opacity-50">جاري مراجعة المسحوبات...</div>
+    </div>
 
-    <div class="section-title opacity-50 mb-3" style="font-size: 0.8rem;">قائمة العملاء (كروت)</div>
+    <div class="section-title mb-3 mt-4"><i class="fas fa-list-ol me-1"></i> ترتيب العشرة الأوائل</div>
     <div id="topCustomersList"></div>
 
-    <div class="section-title opacity-50 mb-3 mt-4" style="font-size: 0.8rem;">جدول ترتيب المسحوبات</div>
+    <div class="section-title mb-3 mt-4"><i class="fas fa-table me-1"></i> إحصائيات كافة العملاء</div>
     <div class="table-container">
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th class="text-center">#</th>
-                    <th>العميل</th>
-                    <th class="text-center">إجمالي المسحوبات</th>
+                    <th>#</th>
+                    <th style="text-align: right;">العميل</th>
+                    <th>الإجمالي</th>
                 </tr>
             </thead>
             <tbody id="rankingTableBody">
-                <tr>
-                    <td colspan="3" class="text-center py-4">جاري تحميل الجدول...</td>
-                </tr>
+                <tr><td colspan="3" class="text-center py-4">جاري التحميل...</td></tr>
             </tbody>
         </table>
     </div>
@@ -141,7 +158,6 @@
 
             return ranking.sort((a, b) => b.totalSales - a.totalSales);
         } catch (e) {
-            console.error(e);
             return [];
         }
     }
@@ -149,29 +165,32 @@
     async function loadTopCustomers() {
         const fullRanking = await calculateSales();
         renderTopThree(fullRanking.slice(0, 3));
-        renderRest(fullRanking.slice(3, 10)); // الكروت (توب 10)
-        renderTable(fullRanking); // الجدول يعرض الكل
+        renderRest(fullRanking.slice(3, 10)); 
+        renderTable(fullRanking); 
     }
 
     function renderTopThree(top) {
         const podium = document.getElementById('podium');
-        if(top.length === 0) return;
+        if(top.length === 0) {
+             podium.innerHTML = '<div class="text-center py-3 opacity-50">لا توجد بيانات مسحوبات حالياً</div>';
+             return;
+        }
         podium.innerHTML = `
             <div class="rank-box rank-2">
-                <div class="rank-avatar"><i class="fas fa-user text-secondary"></i></div>
-                <small class="name-limit fw-bold">${top[1]?.name || '---'}</small>
-                <small class="sales-value">${(top[1]?.totalSales || 0).toLocaleString()} ج.م</small>
+                <div class="rank-avatar" style="border-color: var(--silver)"><i class="fas fa-user"></i></div>
+                <small class="name-limit">${top[1]?.name || '---'}</small>
+                <small class="sales-value">${(top[1]?.totalSales || 0).toLocaleString()} <span style="font-size:0.6rem">ج.م</span></small>
             </div>
             <div class="rank-box rank-1">
                 <i class="fas fa-crown rank-crown"></i>
-                <div class="rank-avatar"><i class="fas fa-user text-warning"></i></div>
-                <small class="name-limit fw-bold">${top[0]?.name || '---'}</small>
-                <small class="sales-value">${(top[0]?.totalSales || 0).toLocaleString()} ج.م</small>
+                <div class="rank-avatar"><i class="fas fa-user"></i></div>
+                <small class="name-limit" style="font-size:0.9rem">${top[0]?.name || '---'}</small>
+                <small class="sales-value" style="font-size:1rem">${(top[0]?.totalSales || 0).toLocaleString()} <span style="font-size:0.7rem">ج.م</span></small>
             </div>
             <div class="rank-box rank-3">
-                <div class="rank-avatar"><i class="fas fa-user" style="color: #cd7f32;"></i></div>
-                <small class="name-limit fw-bold">${top[2]?.name || '---'}</small>
-                <small class="sales-value">${(top[2]?.totalSales || 0).toLocaleString()} ج.م</small>
+                <div class="rank-avatar" style="border-color: var(--bronze)"><i class="fas fa-user"></i></div>
+                <small class="name-limit">${top[2]?.name || '---'}</small>
+                <small class="sales-value">${(top[2]?.totalSales || 0).toLocaleString()} <span style="font-size:0.6rem">ج.م</span></small>
             </div>
         `;
     }
@@ -182,12 +201,12 @@
             <div class="customer-row" onclick="window.location.href='customer-details.html?id=${c.id}'">
                 <div class="d-flex align-items-center overflow-hidden">
                     <div class="badge-rank">${i + 4}</div>
-                    <div class="ms-2">
-                        <div class="fw-bold text-white name-limit">${c.name}</div>
-                        <small class="opacity-50" style="font-size: 0.7rem;">${c.phone}</small>
+                    <div class="ms-3">
+                        <div class="fw-bold name-limit" style="color: var(--text-primary)">${c.name}</div>
+                        <small class="text-muted" style="font-size: 0.7rem;">${c.phone}</small>
                     </div>
                 </div>
-                <div class="text-end" style="min-width: 100px;">
+                <div class="text-end">
                     <div class="sales-value">${c.totalSales.toLocaleString()}</div>
                 </div>
             </div>
@@ -198,12 +217,12 @@
         const tbody = document.getElementById('rankingTableBody');
         tbody.innerHTML = all.map((c, i) => `
             <tr onclick="window.location.href='customer-details.html?id=${c.id}'" style="cursor:pointer">
-                <td class="text-center"><span class="opacity-50">${i + 1}</span></td>
-                <td>
+                <td><span class="badge-rank m-auto">${i + 1}</span></td>
+                <td style="text-align: right;">
                     <div class="fw-bold">${c.name}</div>
-                    <small class="opacity-40">${c.phone}</small>
+                    <small class="text-muted" style="font-size:0.7rem">${c.phone}</small>
                 </td>
-                <td class="text-center fw-bold text-warning">${c.totalSales.toLocaleString()} <small>ج.م</small></td>
+                <td class="fw-bold text-success">${c.totalSales.toLocaleString()}</td>
             </tr>
         `).join('');
     }

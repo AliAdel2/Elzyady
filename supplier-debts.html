@@ -5,83 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مديونيات الموردين - شركة الزيادى</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0d1117; --glass: rgba(255,255,255,0.05); --neon-blue: #58a6ff; --neon-red: #f85149; --neon-green: #3fb950; }
-        body { background: var(--bg); font-family: 'Cairo', sans-serif; color: #c9d1d9; padding-bottom: 30px; }
+        :root { 
+            --accent: #0b5e3d; 
+            --header-bg: #0b5e3d;
+            --bg-light: #f4f7f6;
+            --text-primary: #1b2e26;
+            --border: #dce3de;
+            --white: #ffffff;
+            --danger: #d90429;
+            --info: #0d6efd;
+            --success: #2d6a4f;
+        }
+
+        body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 50px; }
         
+        /* Header */
         .header-section { 
-            padding: 20px; background: var(--glass); backdrop-filter: blur(10px);
-            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: space-between; align-items: center;
+            background: var(--header-bg); padding: 12px 20px; color: white;
+            display: flex; justify-content: space-between; align-items: center; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
+        /* Stats/Total Card */
         .total-debt-card {
-            background: linear-gradient(135deg, rgba(248, 81, 73, 0.1), rgba(88, 166, 255, 0.1));
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
-            padding: 20px; margin: 20px 0; text-align: center;
+            background: var(--white); border: 1px solid var(--border); 
+            border-radius: 18px; padding: 25px 15px; margin: 15px; text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
         }
-        .total-debt-amount { font-size: 2.2rem; font-weight: 800; color: #fff; transition: 0.3s; }
+        .total-debt-amount { font-size: 2rem; font-weight: 800; color: var(--accent); transition: 0.3s; }
+        #cardTitle { font-size: 0.85rem; color: #6c757d; margin-bottom: 5px; font-weight: 700; }
 
-        .filter-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        /* Tabs */
+        .filter-tabs { display: flex; gap: 8px; padding: 0 15px 15px 15px; overflow-x: auto; scrollbar-width: none; }
         .filter-btn {
-            flex: 1; padding: 10px; border-radius: 12px; background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1); color: #8b949e;
-            font-size: 0.85rem; font-weight: 600; transition: 0.3s; cursor: pointer; text-align: center;
+            flex: 1; padding: 10px; border-radius: 12px; background: var(--white);
+            border: 1px solid var(--border); color: #6c757d;
+            font-size: 0.8rem; font-weight: 700; transition: 0.3s; cursor: pointer; text-align: center; white-space: nowrap;
         }
-        .filter-btn.active { background: rgba(88, 166, 255, 0.15); border-color: var(--neon-blue); color: #fff; }
-        .filter-btn.active.btn-red { background: rgba(248, 81, 73, 0.15); border-color: var(--neon-red); }
-        .filter-btn.active.btn-green { background: rgba(63, 185, 80, 0.15); border-color: var(--neon-green); }
+        .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
+        /* Debt Item Card */
         .debt-item {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 18px; padding: 15px; margin-bottom: 12px;
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 18px; padding: 15px; margin: 0 15px 12px 15px;
             display: flex; justify-content: space-between; align-items: center;
             transition: 0.3s; text-decoration: none; color: inherit;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .debt-item:hover { transform: scale(1.01); border-color: var(--neon-blue); background: rgba(255,255,255,0.08); }
+        .debt-item:hover { transform: translateY(-2px); border-color: var(--accent); }
 
-        .sup-info h6 { margin: 0; font-weight: 700; color: #fff; }
-        .sup-info small { color: #8b949e; }
+        .sup-info h6 { margin: 0; font-weight: 800; color: var(--accent); font-size: 0.95rem; }
+        .sup-info small { color: #6c757d; font-weight: 600; font-size: 0.75rem; }
+        
         .debt-value { text-align: left; }
         .debt-value .amount { font-weight: 800; display: block; font-size: 1.1rem; }
 
+        /* Search Box */
+        .search-container { padding: 0 15px 15px 15px; }
         .search-box {
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; color: #fff; padding: 12px 15px; margin-bottom: 15px; width: 100%; outline: none;
+            width: 100%; background: var(--white); border: 1px solid var(--border); 
+            padding: 10px 15px; border-radius: 12px; 
+            color: var(--text-primary); outline: none; font-weight: 600; font-size: 0.9rem;
         }
-        .search-box:focus { border-color: var(--neon-blue); }
-        .c-red { color: var(--neon-red) !important; }
-        .c-green { color: var(--neon-green) !important; }
-        .empty-state { text-align: center; padding: 50px; opacity: 0.5; }
+        .search-box:focus { border-color: var(--accent); }
+
+        .c-red { color: var(--danger) !important; }
+        .c-green { color: var(--success) !important; }
+        .empty-state { text-align: center; padding: 50px; opacity: 0.5; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="header-section">
     <a href="supplier-management.html" class="text-white"><i class="fas fa-arrow-right"></i></a>
-    <h5 class="m-0 fw-bold">مديونيات الموردين</h5>
-    <i class="fas fa-sync" onclick="location.reload()" style="cursor:pointer"></i>
+    <h6 class="m-0 fw-bold"><i class="fas fa-file-invoice-dollar me-1"></i> مديونيات الموردين</h6>
+    <i class="fas fa-sync-alt" onclick="location.reload()" style="cursor:pointer; opacity: 0.8;"></i>
 </div>
 
-<div class="container">
+<div class="container-fluid p-0">
     <div class="total-debt-card">
-        <div id="cardTitle" style="font-size: 0.9rem; opacity: 0.8;">صافي إجمالي المديونيات للموردين</div>
+        <div id="cardTitle">صافي إجمالي المديونيات للموردين</div>
         <div class="total-debt-amount" id="totalDebtSum">0.00</div>
-        <div id="debtStatusLabel" style="font-size: 0.8rem; margin-top: 5px;">جاري حساب الإجماليات...</div>
+        <div id="debtStatusLabel" style="font-size: 0.75rem; margin-top: 5px; font-weight: 700; color: #6c757d;">جاري الحساب...</div>
     </div>
 
-    <input type="text" id="searchInput" class="search-box" placeholder="ابحث باسم المورد...">
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-box" placeholder="ابحث باسم المورد...">
+    </div>
 
     <div class="filter-tabs">
         <div class="filter-btn active" onclick="filterData('all', this)">الكل</div>
-        <div class="filter-btn btn-red" onclick="filterData('madin', this)">علينا (مدين)</div>
-        <div class="filter-btn btn-green" onclick="filterData('daen', this)">لينا (دائن)</div>
+        <div class="filter-btn" onclick="filterData('madin', this)">علينا (مدين)</div>
+        <div class="filter-btn" onclick="filterData('daen', this)">لينا (دائن)</div>
     </div>
 
     <div id="debtList">
-        <div class="text-center mt-5"><div class="spinner-border text-info"></div><br><p class="mt-2">جاري التدقيق المالي...</p></div>
+        <div class="text-center mt-5"><div class="spinner-border spinner-border-sm" style="color: var(--accent);"></div><p class="mt-2 small fw-bold">جاري التدقيق المالي...</p></div>
     </div>
 </div>
 
@@ -107,8 +129,8 @@
             getDocs(query(collection(db, "supplier_transactions"), where("supplierId", "==", supId)))
         ]);
 
-        let debt = 0;   // علينا
-        let credit = 0; // سددناه
+        let debt = 0;   
+        let credit = 0; 
 
         snapTrans.forEach(doc => {
             const d = doc.data();
@@ -140,10 +162,10 @@
         });
 
         const sumEl = document.getElementById('totalDebtSum');
-        sumEl.innerText = Math.abs(totalSum).toLocaleString() + " ج.م";
+        sumEl.innerText = Math.abs(totalSum).toLocaleString('ar-EG') + " ج.م";
         sumEl.className = `total-debt-amount ${totalSum >= 0 ? 'c-red' : 'c-green'}`;
         document.getElementById('cardTitle').innerText = totalSum >= 0 ? "صافي مديونية علينا للموردين" : "صافي رصيد فائض لنا عند الموردين";
-        document.getElementById('debtStatusLabel').innerText = `عدد الموردين المعروضين: ${visibleCount}`;
+        document.getElementById('debtStatusLabel').innerText = `عدد الموردين: ${visibleCount}`;
     };
 
     window.filterData = (type, btn) => {
@@ -173,8 +195,6 @@
             });
 
             const results = await Promise.all(balancePromises);
-            
-            // ترتيب الموردين من الأكبر مديونية للأصغر
             results.sort((a, b) => b.balance - a.balance);
 
             results.forEach(res => {
@@ -187,21 +207,20 @@
                            data-name="${res.data.name.toLowerCase()}">
                             <div class="sup-info">
                                 <h6>${res.data.name}</h6>
-                                <small><i class="fas fa-phone-alt me-1" style="font-size:0.6rem"></i> ${res.data.phone || 'غير مسجل'}</small>
+                                <small><i class="fas fa-phone-alt me-1" style="font-size:0.6rem; color: var(--accent)"></i> ${res.data.phone || 'بدون هاتف'}</small>
                             </div>
                             <div class="debt-value text-start">
-                                <span class="amount ${colorClass}">${Math.abs(res.balance).toLocaleString()}</span>
-                                <small class="opacity-50" style="font-size:0.7rem">${res.balance > 0 ? 'علينا له' : 'لنا عنده'}</small>
+                                <span class="amount ${colorClass}">${Math.abs(res.balance).toLocaleString('ar-EG')}</span>
+                                <small class="opacity-50" style="font-size:0.7rem; font-weight:800;">${res.balance > 0 ? 'علينا له' : 'لنا عنده'}</small>
                             </div>
                         </a>
                     `;
                 }
             });
 
-            debtList.innerHTML = html || '<div class="empty-state">لا يوجد مديونيات حالياً.. الحسابات خالية ✅</div>';
+            debtList.innerHTML = html || '<div class="empty-state">لا يوجد مديونيات حالياً ✅</div>';
             window.updateTopCard();
 
-            // تفعيل البحث
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 document.querySelectorAll('.debt-item').forEach(item => {
@@ -213,7 +232,7 @@
 
         } catch (error) {
             console.error(error);
-            debtList.innerHTML = '<div class="alert alert-danger text-center">عذراً، حدث خطأ في جلب المديونيات</div>';
+            debtList.innerHTML = '<div class="alert alert-danger mx-3 text-center small fw-bold">خطأ في جلب البيانات</div>';
         }
     }
 
