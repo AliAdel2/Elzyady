@@ -47,6 +47,19 @@
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.85rem; color: var(--text-primary); }
         .search-item:hover { background: #f0f7f4; color: var(--accent); }
 
+        /* ستايل مربع رصيد العميل */
+        #customerBalanceInfo {
+            display: none;
+            background: #eef7f3;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+
         .total-box { background: var(--accent); color: white; border-radius: 20px; padding: 18px; text-align: center; margin-top: 20px; }
         .payment-box { background: #edf2ef; border-radius: 18px; padding: 15px; margin-top: 15px; border: 1px dashed var(--accent); }
         
@@ -68,9 +81,12 @@
         <div class="row g-2 mb-4">
             <div class="col-7 position-relative">
                 <label class="sub-lbl">العميل</label>
-                <input type="text" id="customerSearch" class="form-control" placeholder="ابحث عن عميل..." oninput="searchCustomer(this)" value="">
+                <input type="text" id="customerSearch" class="form-control" placeholder="ابحث عن عميل..." oninput="searchCustomer(this)" autocomplete="off">
                 <input type="hidden" id="customerSelect" value="">
                 <div id="customerResults" class="search-results"></div>
+                <div id="customerBalanceInfo">
+                    <i class="fas fa-wallet me-1"></i> رصيد العميل الحالي: <span id="curBalanceVal">0.00</span>
+                </div>
             </div>
             <div class="col-5">
                 <label class="sub-lbl">التاريخ</label>
@@ -141,11 +157,10 @@
     let editId = new URLSearchParams(window.location.search).get('edit');
     let isChanged = false;
 
-    // منع الخروج بالخطأ عند الضغط على زر الرجوع في الموبايل أو غلق التاب
     window.addEventListener('beforeunload', (e) => {
         if (isChanged) {
             e.preventDefault();
-            e.returnValue = ''; // رسالة تأكيد المتصفح الافتراضية
+            e.returnValue = '';
         }
     });
 
@@ -154,7 +169,6 @@
         window.location.href = "sales-history.html";
     };
 
-    // دالة لتسهيل رصد أي تغيير
     window.handleInput = () => {
         isChanged = true;
         calc();
@@ -180,9 +194,14 @@
                     document.getElementById('invTime').value = data.time;
                     document.getElementById('payMethod').value = data.paymentMethod;
                     document.getElementById('paidAmount').value = data.paid;
+                    
+                    // إظهار رصيد العميل عند التعديل
+                    const cust = customers.find(c => c.id === data.customerId);
+                    if(cust) showBalance(cust.currentBalance);
+
                     Object.keys(data).forEach(k => { if(!isNaN(k)) addNewRow(data[k]); });
                 }
-                isChanged = false; // عشان عند التعديل التحميل ميعتبرش تغيير
+                isChanged = false;
             } else { addNewRow(); }
             calc();
         } catch (e) { console.error(e); }
@@ -191,15 +210,18 @@
     window.searchCustomer = (input) => {
         const term = input.value.toLowerCase().trim();
         const resultsDiv = document.getElementById('customerResults');
-        if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
+        const balanceDiv = document.getElementById('customerBalanceInfo');
+        
+        if (term.length < 1) { 
+            resultsDiv.style.display = 'none'; 
+            balanceDiv.style.display = 'none';
+            return; 
+        }
 
-        const filtered = customers.filter(c => {
-            const firstWord = c.name.toLowerCase().split(" ")[0];
-            return firstWord.startsWith(term);
-        });
+        const filtered = customers.filter(c => c.name.toLowerCase().startsWith(term));
         
         resultsDiv.innerHTML = filtered.map(c => `
-            <div class="search-item" onclick="selectCustomer('${c.id}', '${c.name}')">
+            <div class="search-item" onclick="selectCustomer('${c.id}', '${c.name}', ${c.currentBalance || 0})">
                 <b>${c.name}</b>
                 <span style="font-size:0.7rem; color:#666;">رصيد: ${c.currentBalance || 0}</span>
             </div>
@@ -207,22 +229,26 @@
         resultsDiv.style.display = filtered.length > 0 ? 'block' : 'none';
     };
 
-    window.selectCustomer = (id, name) => {
+    window.selectCustomer = (id, name, balance) => {
         document.getElementById('customerSearch').value = name;
         document.getElementById('customerSelect').value = id;
         document.getElementById('customerResults').style.display = 'none';
+        showBalance(balance);
         isChanged = true;
     };
+
+    function showBalance(balance) {
+        const balanceDiv = document.getElementById('customerBalanceInfo');
+        document.getElementById('curBalanceVal').innerText = parseFloat(balance).toFixed(2);
+        balanceDiv.style.display = 'block';
+    }
 
     window.searchProduct = (input) => {
         const term = input.value.toLowerCase().trim();
         const resultsDiv = input.parentElement.querySelector('.search-results');
         if (term.length < 1) { resultsDiv.style.display = 'none'; return; }
 
-        const filtered = inventory.filter(i => {
-            const firstWord = i.name.toLowerCase().split(" ")[0];
-            return firstWord.startsWith(term);
-        }).slice(0, 10);
+        const filtered = inventory.filter(i => i.name.toLowerCase().startsWith(term)).slice(0, 10);
 
         resultsDiv.innerHTML = filtered.map(p => `
             <div class="search-item" onclick="selectProduct('${input.closest('.product-row').id}', '${p.id}', '${p.name}')">
@@ -254,7 +280,7 @@
                 <div class="row g-2 mb-2">
                     <div class="col-7 position-relative">
                         <span class="sub-lbl">ابحث عن الصنف</span>
-                        <input type="text" class="form-control p-search" placeholder="اكتب أول اسم..." oninput="searchProduct(this)" value="${oldData ? oldData.name : ''}">
+                        <input type="text" class="form-control p-search" placeholder="اكتب أول اسم..." oninput="searchProduct(this)" value="${oldData ? oldData.name : ''}" autocomplete="off">
                         <input type="hidden" class="p-select" value="${oldData ? oldData.stockId : ''}">
                         <div class="search-results"></div>
                     </div>
@@ -358,7 +384,7 @@
                 }
                 await addDoc(collection(db, "invoices"), invoiceData);
             }
-            isChanged = false; // تصفير الحالة عشان الخروج يبقى مسموح بعد الحفظ
+            isChanged = false; 
             alert("تم حفظ الفاتورة بنجاح");
             window.location.href = "sales-history.html";
         } catch(e) { alert("خطأ: " + e.message); saveBtn.disabled = false; }
