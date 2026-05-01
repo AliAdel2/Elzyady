@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* الهوية البصرية لشركة الزيادي */
         :root { 
             --accent: #0b5e3d; 
             --header-bg: #0b5e3d;
@@ -18,50 +17,26 @@
             --white: #ffffff;
             --danger: #d90429;
         }
-        
         body { background: var(--bg-light); font-family: 'Cairo', sans-serif; color: var(--text-primary); padding-bottom: 30px; }
-        
-        /* Header */
-        .header { 
-            background: var(--header-bg); padding: 15px 20px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white;
-        }
-
-        /* Summary Card */
+        .header { background: var(--header-bg); padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: white; }
         .summary-card {
-            background: var(--accent);
-            border-radius: 20px; padding: 25px; margin-top: 15px;
-            color: white; text-align: center;
-            box-shadow: 0 8px 20px rgba(11, 94, 61, 0.2);
+            background: var(--accent); border-radius: 20px; padding: 25px; margin-top: 15px;
+            color: white; text-align: center; box-shadow: 0 8px 20px rgba(11, 94, 61, 0.2);
         }
-
-        /* Debt Items */
         .debt-item {
             background: var(--white); border: 1px solid var(--border);
             border-radius: 18px; padding: 18px; margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: 0.3s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            border-right: 5px solid var(--danger); /* تمييز المديونية باللون الأحمر */
+            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border-right: 5px solid var(--danger);
         }
         .debt-item:active { transform: scale(0.97); }
-
         .debt-value { color: var(--danger); font-weight: 800; font-size: 1.15rem; }
-        
-        /* Search Bar */
         .search-bar {
-            background: var(--white) !important;
-            border: 1px solid var(--border) !important;
-            color: var(--text-primary) !important; 
-            border-radius: 15px; padding: 12px 18px;
-            font-weight: 600;
+            background: var(--white) !important; border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important; border-radius: 15px; padding: 12px 18px; font-weight: 600;
         }
-        .search-bar:focus { border-color: var(--accent) !important; box-shadow: none; }
-
-        @media print {
-            .header, .search-bar, i { display: none !important; }
-            .debt-item { border: 1px solid #ccc !important; break-inside: avoid; }
-        }
+        @media print { .header, .search-bar, i { display: none !important; } .debt-item { border: 1px solid #ccc !important; break-inside: avoid; } }
     </style>
 </head>
 <body>
@@ -85,14 +60,14 @@
     <div id="debtsList" class="mt-4">
         <div class="text-center my-5">
             <div class="spinner-border" style="color: var(--accent);"></div>
-            <p class="mt-2 small text-muted">جاري تجميع البيانات المالية الحقيقية...</p>
+            <p class="mt-2 small text-muted">جاري تحميل البيانات بسرعة الصاروخ...</p>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI",
@@ -107,57 +82,61 @@
     const db = getFirestore(app);
     let debtData = [];
 
-    async function getCustomerRealBalance(customerData, customerId) {
-        try {
-            const opening = Number(customerData.initialBalance) || 0;
-            const qInv = query(collection(db, "invoices"), where("customerId", "==", customerId));
-            const snapInv = await getDocs(qInv);
-            let invRemaining = 0;
-            snapInv.forEach(doc => invRemaining += (Number(doc.data().remaining) || 0));
-
-            const qTrans = query(collection(db, "transactions"), where("partyId", "==", customerId));
-            const snapTrans = await getDocs(qTrans);
-            let transEffect = 0;
-            snapTrans.forEach(doc => {
-                const tr = doc.data();
-                if(tr.type === 'قبض') transEffect -= (Number(tr.amount) || 0);
-                else if(tr.type === 'صرف') transEffect += (Number(tr.amount) || 0);
-            });
-            return opening + invRemaining + transEffect;
-        } catch (e) { return 0; }
-    }
-
     async function loadDebts() {
-        const snap = await getDocs(collection(db, "customers"));
-        
-        const promises = snap.docs.map(async (docSnap) => {
-            const data = docSnap.data();
-            const balance = await getCustomerRealBalance(data, docSnap.id);
-            if (balance > 0) { 
-                return { id: docSnap.id, ...data, realBalance: balance };
-            }
-            return null;
-        });
+        try {
+            // جلب الـ 3 مجموعات مرة واحدة فقط (3 طلبات بدلاً من 100)
+            const [custSnap, invSnap, transSnap] = await Promise.all([
+                getDocs(collection(db, "customers")),
+                getDocs(collection(db, "invoices")),
+                getDocs(collection(db, "transactions"))
+            ]);
 
-        const results = await Promise.all(promises);
-        debtData = results.filter(item => item !== null);
+            // تجميع بيانات الفواتير في خريطة (Map) ليسهل البحث عنها
+            const invoiceBalances = {};
+            invSnap.forEach(doc => {
+                const data = doc.data();
+                const cid = data.customerId;
+                invoiceBalances[cid] = (invoiceBalances[cid] || 0) + (Number(data.remaining) || 0);
+            });
 
-        debtData.sort((a, b) => b.realBalance - a.realBalance);
-        
-        let total = debtData.reduce((sum, item) => sum + item.realBalance, 0);
-        document.getElementById('totalDebts').innerText = total.toLocaleString('ar-EG', {minimumFractionDigits: 2});
-        
-        renderDebts(debtData);
+            // تجميع بيانات السندات (قبض وصرف)
+            const transBalances = {};
+            transSnap.forEach(doc => {
+                const data = doc.data();
+                const cid = data.partyId;
+                let effect = 0;
+                if(data.type === 'قبض') effect = -(Number(data.amount) || 0);
+                else if(data.type === 'صرف') effect = (Number(data.amount) || 0);
+                transBalances[cid] = (transBalances[cid] || 0) + effect;
+            });
+
+            // حساب الرصيد النهائي لكل عميل في المتصفح فوراً
+            debtData = custSnap.docs.map(docSnap => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                const opening = Number(data.initialBalance) || 0;
+                const invDebt = invoiceBalances[id] || 0;
+                const transDebt = transBalances[id] || 0;
+                const finalBalance = opening + invDebt + transDebt;
+
+                return finalBalance > 0 ? { id, ...data, realBalance: finalBalance } : null;
+            }).filter(item => item !== null);
+
+            debtData.sort((a, b) => b.realBalance - a.realBalance);
+            
+            let total = debtData.reduce((sum, item) => sum + item.realBalance, 0);
+            document.getElementById('totalDebts').innerText = total.toLocaleString('ar-EG', {minimumFractionDigits: 2});
+            
+            renderDebts(debtData);
+        } catch (e) {
+            console.error(e);
+            document.getElementById('debtsList').innerHTML = '<div class="alert alert-danger">خطأ في تحميل البيانات</div>';
+        }
     }
 
     function renderDebts(data) {
         const list = document.getElementById('debtsList');
-        list.innerHTML = '';
-
-        if(data.length === 0) {
-            list.innerHTML = '<div class="text-center opacity-50 my-5">لا يوجد مديونيات حالياً</div>';
-            return;
-        }
+        list.innerHTML = data.length === 0 ? '<div class="text-center opacity-50 my-5">لا يوجد مديونيات حالياً</div>' : '';
 
         data.forEach(c => {
             list.innerHTML += `
@@ -168,10 +147,9 @@
                     </div>
                     <div class="text-end">
                         <div class="debt-value">${c.realBalance.toLocaleString('ar-EG', {minimumFractionDigits: 2})}</div>
-                        <small class="text-muted fw-bold" style="font-size: 0.7rem;">جنيه مصري</small>
+                        <small class="text-muted fw-bold" style="font-size: 0.7rem;">ج.م</small>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     }
 

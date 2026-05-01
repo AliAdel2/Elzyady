@@ -46,6 +46,8 @@
             border-right: 5px solid transparent;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
+        
+        /* تأثيرات الألوان عند انتهاء الحساب */
         .customer-card.has-debt { border-right-color: var(--neon-red); }
         .customer-card.is-clear { border-right-color: var(--neon-green); }
         
@@ -65,6 +67,8 @@
         }
         .btn-pay { background: rgba(40, 167, 69, 0.1); color: var(--neon-green); border: 1px solid rgba(40, 167, 69, 0.2); }
         .btn-info { background: rgba(0, 123, 255, 0.1); color: var(--neon-blue); border: 1px solid rgba(0, 123, 255, 0.2); }
+        
+        .loading-shimmer { color: #ccc; font-style: italic; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -82,9 +86,9 @@
 </div>
 
 <div class="container py-3" id="customersContainer">
-    <div class="text-center py-5">
+    <div class="text-center py-5" id="initialLoader">
         <div class="spinner-border text-success" role="status"></div>
-        <p class="mt-2 small fw-bold">جاري تحميل بيانات العملاء...</p>
+        <p class="mt-2 small fw-bold">جاري تحميل القائمة...</p>
     </div>
 </div>
 
@@ -105,6 +109,7 @@
     const db = getFirestore(app);
     let allCustomers = [];
 
+    // دالة الحساب الأصلية (بدون تعديل في المنطق لضمان الدقة)
     async function getRealDebt(customerId, initialBalance = 0) {
         try {
             const qInvoices = query(collection(db, "invoices"), where("customerId", "==", customerId));
@@ -135,20 +140,44 @@
             const q = query(collection(db, "customers"), orderBy("name"));
             const snap = await getDocs(q);
             
-            const customerPromises = snap.docs.map(async (doc) => {
-                const data = doc.data();
-                const debt = await getRealDebt(doc.id, data.initialBalance || 0);
-                return {
-                    id: doc.id,
-                    ...data,
-                    realBalance: debt
-                };
+            // 1. استخراج البيانات الأساسية فوراً لسرعة العرض
+            allCustomers = snap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                realBalance: null // القيمة الافتراضية أثناء التحميل
+            }));
+
+            // 2. عرض القائمة فوراً بالأسماء فقط
+            renderCustomers(allCustomers);
+
+            // 3. حساب المديونية لكل عميل "في الخلفية" وتحديثه في الواجهة فور انتهائه
+            allCustomers.forEach(async (cust) => {
+                const debt = await getRealDebt(cust.id, cust.initialBalance || 0);
+                cust.realBalance = debt; // تحديث المصفوفة للبحث لاحقاً
+                updateIndividualUI(cust.id, debt);
             });
 
-            allCustomers = await Promise.all(customerPromises);
-            renderCustomers(allCustomers);
         } catch (e) {
-            container.innerHTML = `<div class="alert alert-danger mx-3 text-center">خطأ في جلب البيانات: ${e.message}</div>`;
+            container.innerHTML = `<div class="alert alert-danger mx-3 text-center">خطأ: ${e.message}</div>`;
+        }
+    }
+
+    // دالة لتحديث كارت عميل معين بعد انتهاء حساب ديونه
+    function updateIndividualUI(id, balance) {
+        const balanceSpan = document.getElementById(`balance-${id}`);
+        const cardDiv = document.getElementById(`card-${id}`);
+        
+        if (balanceSpan) {
+            const isDebt = balance > 0;
+            balanceSpan.className = `balance-value ${isDebt ? 'text-debt' : 'text-clear'}`;
+            balanceSpan.innerHTML = `
+                ${Math.abs(balance).toLocaleString(undefined, {minimumFractionDigits: 2})} 
+                <small style="font-size: 0.6rem; font-weight: 700;">ج.م (${isDebt ? 'عليه' : balance < 0 ? 'له' : 'خالص'})</small>
+            `;
+        }
+        
+        if (cardDiv) {
+            cardDiv.classList.add(balance > 0 ? 'has-debt' : 'is-clear');
         }
     }
 
@@ -160,18 +189,19 @@
         }
 
         container.innerHTML = list.map(cust => {
-            const balance = cust.realBalance || 0;
-            const hasDebt = balance > 0;
+            const balance = cust.realBalance;
+            const isCalculated = balance !== null;
 
             return `
-                <div class="customer-card ${balance > 0 ? 'has-debt' : 'is-clear'}">
+                <div id="card-${cust.id}" class="customer-card ${isCalculated ? (balance > 0 ? 'has-debt' : 'is-clear') : ''}">
                     <div>
                         <h6 class="customer-name">${cust.name}</h6>
                         <small class="phone-sub"><i class="fas fa-phone-alt me-1"></i> ${cust.phone || 'بدون هاتف'}</small>
                         <span class="balance-label">صافي الرصيد الحالي</span>
-                        <span class="balance-value ${balance > 0 ? 'text-debt' : 'text-clear'}">
-                            ${Math.abs(balance).toLocaleString(undefined, {minimumFractionDigits: 2})} 
-                            <small style="font-size: 0.6rem; font-weight: 700;">ج.م (${balance > 0 ? 'عليه' : balance < 0 ? 'له' : 'خالص'})</small>
+                        <span id="balance-${cust.id}" class="balance-value ${!isCalculated ? 'loading-shimmer' : (balance > 0 ? 'text-debt' : 'text-clear')}">
+                            ${isCalculated ? 
+                                `${Math.abs(balance).toLocaleString(undefined, {minimumFractionDigits: 2})} <small style="font-size: 0.6rem; font-weight: 700;">ج.م (${balance > 0 ? 'عليه' : balance < 0 ? 'له' : 'خالص'})</small>` 
+                                : '<i class="fas fa-sync fa-spin me-1"></i> جاري الحساب...'}
                         </span>
                     </div>
                     <div class="action-container">
@@ -189,6 +219,7 @@
 
     window.filterCustomers = () => {
         const term = document.getElementById('searchInput').value.toLowerCase();
+        // الفلتر هنا لحظي لأنه شغال على المصفوفة المحملة في الذاكرة
         const filtered = allCustomers.filter(c => 
             (c.name && c.name.toLowerCase().includes(term)) || 
             (c.phone && c.phone.includes(term))

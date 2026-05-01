@@ -12,13 +12,12 @@
         body { background: var(--bg); font-family: 'Cairo', sans-serif; padding-bottom: 30px; }
         .header-nav { background: var(--accent); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; }
         
-        /* تعديل كارت الرصيد والخط */
         .balance-card { background: white; border-radius: 25px; margin: 20px 15px; padding: 30px 20px; text-align: center; box-shadow: 0 10px 25px rgba(11, 94, 61, 0.1); border: 1px solid rgba(11, 94, 61, 0.1); }
         .balance-amount { 
             color: var(--accent); 
             font-size: 2.5rem; 
             font-weight: 800; 
-            font-family: 'Cairo', sans-serif; /* توحيد الخط */
+            font-family: 'Cairo', sans-serif;
             direction: ltr; 
             margin-top: 5px;
         }
@@ -75,7 +74,7 @@
         <button class="btn-confirm" id="btnConfirm" onclick="saveTransaction()">تأكيد العملية</button>
     </div>
 
-    <h6 class="history-title">آخر العمليات المسجلة</h6>
+    <h6 class="history-title">آخر 20 عملية مسجلة</h6>
     <div id="logsList">
         <div class="text-center py-5"><div class="spinner-border text-success"></div></div>
     </div>
@@ -83,7 +82,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, limit, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, limit, serverTimestamp, doc, getDoc, updateDoc, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyB3jpSs_LiIZwoaPIgRAiALVX5F1OkBYOI", authDomain: "elzyady-da509.firebaseapp.com", projectId: "elzyady-da509", storageBucket: "elzyady-da509.firebasestorage.app", messagingSenderId: "242117738897", appId: "1:242117738897:web:d658d6ca335b316f7f9a30" };
     const app = initializeApp(firebaseConfig);
@@ -102,17 +101,27 @@
 
     async function loadData() {
         try {
-            const invSnap = await getDocs(collection(db, "invoices"));
-            const logsSnap = await getDocs(collection(db, "cash_logs"));
+            // 1. جلب الرصيد المحفوظ مباشرة (سرعة فائقة)
+            const metaDoc = await getDoc(doc(db, "settings", "cash_meta"));
+            let currentBalance = 0;
+            if(metaDoc.exists()) {
+                currentBalance = metaDoc.data().balance || 0;
+            }
+            document.getElementById('currentBalance').innerText = Math.round(currentBalance).toLocaleString('ar-EG') + ' ج.م';
+
+            // 2. جلب آخر 20 عملية فقط (15 يدوي + 5 مبيعات)
+            const logsQuery = query(collection(db, "cash_logs"), orderBy("timestamp", "desc"), limit(20));
+            const logsSnap = await getDocs(logsQuery);
+            
+            const invQuery = query(collection(db, "invoices"), orderBy("timestamp", "desc"), limit(10));
+            const invSnap = await getDocs(invQuery);
 
             let combinedLogs = [];
-            let liveBalance = 0;
 
             invSnap.forEach(d => {
                 const data = d.data();
                 const paid = Math.round(Number(data.total || 0) - Number(data.remaining || 0));
                 if(paid > 0) {
-                    liveBalance += paid;
                     combinedLogs.push({
                         name: data.customerName || 'عميل نقدي',
                         amount: paid,
@@ -126,12 +135,9 @@
 
             logsSnap.forEach(d => {
                 const data = d.data();
-                const val = Math.round(Number(data.amount || 0));
-                if(data.type === 'in') liveBalance += val; else liveBalance -= val;
-
                 combinedLogs.push({
                     name: data.note || (data.type === 'in' ? 'إيداع نقدي' : 'سحب مصروفات'),
-                    amount: val,
+                    amount: data.amount,
                     type: data.type,
                     time: data.date || '',
                     isSale: false,
@@ -139,16 +145,14 @@
                 });
             });
 
-            // تحديث الرصيد العلوي بدون أصفار عشرية
-            document.getElementById('currentBalance').innerText = Math.round(liveBalance).toLocaleString('ar-EG') + ' ج.م';
-
             combinedLogs.sort((a, b) => b.ts - a.ts);
 
             const logsList = document.getElementById('logsList');
             if(combinedLogs.length === 0) {
                 logsList.innerHTML = '<div class="text-center py-5 text-muted small">لا توجد عمليات مسجلة</div>';
             } else {
-                logsList.innerHTML = combinedLogs.map(log => `
+                // عرض أول 20 عملية فقط بعد الدمج
+                logsList.innerHTML = combinedLogs.slice(0, 20).map(log => `
                     <div class="log-item">
                         <div class="log-icon ${log.type === 'in' ? 'icon-in' : 'icon-out'}">
                             <i class="fas fa-${log.type === 'in' ? 'plus' : 'minus'}"></i>
@@ -166,9 +170,6 @@
                     </div>
                 `).join('');
             }
-            
-            await setDoc(doc(db, "settings", "cash_meta"), { balance: liveBalance }, { merge: true });
-
         } catch (e) {
             console.error(e);
             document.getElementById('logsList').innerHTML = '<div class="alert alert-danger mx-3 small">خطأ في التحميل</div>';
@@ -186,6 +187,7 @@
         btn.disabled = true; btn.innerText = 'جاري الحفظ...';
 
         try {
+            // تسجيل العملية
             await addDoc(collection(db, "cash_logs"), {
                 amount: amt,
                 note: nt,
@@ -194,10 +196,18 @@
                 date: new Date().toLocaleString('ar-EG')
             });
 
+            // تحديث الرصيد التراكمي فوراً
+            const change = currentType === 'in' ? amt : -amt;
+            const metaRef = doc(db, "settings", "cash_meta");
+            await updateDoc(metaRef, { balance: increment(change) });
+
             amtInput.value = '';
             document.getElementById('note').value = '';
             loadData();
-        } catch (e) { alert("خطأ في الحفظ"); }
+        } catch (e) { 
+            console.error(e);
+            alert("خطأ في الحفظ"); 
+        }
         btn.disabled = false;
         setType(currentType);
     };
